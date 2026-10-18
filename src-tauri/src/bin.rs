@@ -6,9 +6,10 @@ pub fn find(name: &str) -> Option<PathBuf> {
     let exe_name = if cfg!(windows) { format!("{name}.exe") } else { name.to_string() };
     let mut candidates: Vec<PathBuf> = Vec::new();
     if let Ok(exe) = std::env::current_exe()
-        && let Some(dir) = exe.parent() {
-            candidates.push(dir.join(&exe_name));
-        }
+        && let Some(dir) = exe.parent()
+    {
+        candidates.push(dir.join(&exe_name));
+    }
     for prefix in ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"] {
         candidates.push(PathBuf::from(prefix).join(&exe_name));
     }

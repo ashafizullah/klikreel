@@ -51,10 +51,7 @@ fn parse_block(block: &str) -> Option<SseEvent> {
 }
 
 /// Feeds every SSE event of a response body to `f`.
-pub async fn for_each_event(
-    resp: reqwest::Response,
-    mut f: impl FnMut(SseEvent) -> AppResult<()>,
-) -> AppResult<()> {
+pub async fn for_each_event(resp: reqwest::Response, mut f: impl FnMut(SseEvent) -> AppResult<()>) -> AppResult<()> {
     let mut parser = SseParser::default();
     let mut stream = resp.bytes_stream();
     while let Some(chunk) = stream.next().await {

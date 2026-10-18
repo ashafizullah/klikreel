@@ -2,13 +2,13 @@
 use crate::bin;
 use crate::error::{AppError, AppResult};
 use base64::Engine;
+use chromiumoxide::Page;
 use chromiumoxide::browser::{Browser, BrowserConfig};
 use chromiumoxide::cdp::browser_protocol::dom::Rgba;
 use chromiumoxide::cdp::browser_protocol::emulation::SetDefaultBackgroundColorOverrideParams;
 use chromiumoxide::cdp::browser_protocol::page::{CaptureScreenshotFormat, CaptureScreenshotParams};
 use chromiumoxide::cdp::js_protocol::runtime::EvaluateParams;
 use chromiumoxide::handler::viewport::Viewport;
-use chromiumoxide::Page;
 use futures::StreamExt;
 
 fn cdp<E: std::fmt::Display>(e: E) -> AppError {
@@ -24,9 +24,8 @@ pub struct FrameRenderer {
 
 impl FrameRenderer {
     pub async fn launch(html: &str, width: u32, height: u32) -> AppResult<Self> {
-        let chrome = bin::chrome().ok_or_else(|| {
-            AppError::msg("Google Chrome / Chromium not found. Install Chrome to render HTML scenes.")
-        })?;
+        let chrome =
+            bin::chrome().ok_or_else(|| AppError::msg("Google Chrome / Chromium not found. Install Chrome to render HTML scenes."))?;
         let profile = std::env::temp_dir().join(format!("aive-chrome-{}", uuid::Uuid::new_v4().simple()));
         let config = BrowserConfig::builder()
             .chrome_executable(chrome)
@@ -55,11 +54,9 @@ impl FrameRenderer {
         let (browser, mut handler) = Browser::launch(config).await.map_err(cdp)?;
         let handler = tokio::spawn(async move { while handler.next().await.is_some() {} });
         let page = browser.new_page("about:blank").await.map_err(cdp)?;
-        page.execute(SetDefaultBackgroundColorOverrideParams {
-            color: Some(Rgba { r: 0, g: 0, b: 0, a: Some(0.0) }),
-        })
-        .await
-        .map_err(cdp)?;
+        page.execute(SetDefaultBackgroundColorOverrideParams { color: Some(Rgba { r: 0, g: 0, b: 0, a: Some(0.0) }) })
+            .await
+            .map_err(cdp)?;
         page.set_content(html).await.map_err(cdp)?;
         let renderer = Self { browser, handler, page, _profile: profile };
         renderer.eval("window.__ready").await?;
@@ -67,12 +64,7 @@ impl FrameRenderer {
     }
 
     async fn eval(&self, expr: &str) -> AppResult<serde_json::Value> {
-        let params = EvaluateParams::builder()
-            .expression(expr)
-            .await_promise(true)
-            .return_by_value(true)
-            .build()
-            .map_err(cdp)?;
+        let params = EvaluateParams::builder().expression(expr).await_promise(true).return_by_value(true).build().map_err(cdp)?;
         let res = self.page.evaluate_expression(params).await.map_err(cdp)?;
         Ok(res.value().cloned().unwrap_or(serde_json::Value::Null))
     }
@@ -83,11 +75,7 @@ impl FrameRenderer {
         let shot = self
             .page
             .execute(
-                CaptureScreenshotParams::builder()
-                    .format(CaptureScreenshotFormat::Png)
-                    .from_surface(true)
-                    .optimize_for_speed(true)
-                    .build(),
+                CaptureScreenshotParams::builder().format(CaptureScreenshotFormat::Png).from_surface(true).optimize_for_speed(true).build(),
             )
             .await
             .map_err(cdp)?;

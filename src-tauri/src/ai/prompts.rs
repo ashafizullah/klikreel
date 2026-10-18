@@ -1,5 +1,5 @@
 //! System prompt and helpers for generating HTML Frames.
-use super::{chat, ChatRequest, Message, Part, Role};
+use super::{ChatRequest, Message, Part, Role, chat};
 use crate::error::{AppError, AppResult};
 use serde::Deserialize;
 
@@ -105,9 +105,9 @@ pub fn contract_issues(html: &str, truncated: bool) -> Vec<String> {
             issues.push(format!("It uses {what}, which is not allowed."));
         }
     }
-    let external = ["http://", "https://"].iter().any(|scheme| {
-        html.match_indices(scheme).any(|(i, _)| !html[i + scheme.len()..].starts_with("www.w3.org"))
-    });
+    let external = ["http://", "https://"]
+        .iter()
+        .any(|scheme| html.match_indices(scheme).any(|(i, _)| !html[i + scheme.len()..].starts_with("www.w3.org")));
     if external {
         issues.push("It loads external URLs; there is no network access.".to_string());
     }
@@ -160,12 +160,8 @@ pub async fn generate_frame(req: &FrameRequest, on_text: &mut (dyn FnMut(&str) +
         if result.stop_reason == "refusal" {
             return Err(AppError::msg("The model declined this request. Try rephrasing the prompt."));
         }
-        let reply: String = result
-            .message
-            .content
-            .iter()
-            .filter_map(|p| if let Part::Text { text } = p { Some(text.as_str()) } else { None })
-            .collect();
+        let reply: String =
+            result.message.content.iter().filter_map(|p| if let Part::Text { text } = p { Some(text.as_str()) } else { None }).collect();
         let html = extract_html(&reply).ok_or_else(|| AppError::msg("The AI did not return HTML"))?;
         let issues = contract_issues(&html, result.stop_reason == "max_tokens");
         if issues.is_empty() || attempt == 1 {
@@ -175,10 +171,7 @@ pub async fn generate_frame(req: &FrameRequest, on_text: &mut (dyn FnMut(&str) +
         chat_req.messages.push(Message {
             role: Role::User,
             content: vec![Part::Text {
-                text: format!(
-                    "The document breaks the frame contract:\n- {}\nFix this and return the full document.",
-                    issues.join("\n- ")
-                ),
+                text: format!("The document breaks the frame contract:\n- {}\nFix this and return the full document.", issues.join("\n- ")),
             }],
         });
     }

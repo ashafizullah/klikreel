@@ -1,14 +1,14 @@
 //! Tauri command surface exposed to the webview.
-use crate::ai::{self, prompts::FrameRequest, ChatRequest, ChatResult};
+use crate::ai::{self, ChatRequest, ChatResult, prompts::FrameRequest};
 use crate::error::{AppError, AppResult};
-use crate::render::{self, compose::RenderJob, RenderEvent};
+use crate::render::{self, RenderEvent, compose::RenderJob};
 use crate::{bin, keys, media};
 use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
-use tauri::ipc::Channel;
 use tauri::State;
+use tauri::ipc::Channel;
 
 #[derive(Serialize, Clone)]
 #[serde(tag = "type", rename_all = "camelCase")]

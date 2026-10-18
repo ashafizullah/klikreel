@@ -46,6 +46,9 @@
     "publisher": "KlikReel contributors",
     "homepage": "https://github.com/ashafizullah/klikreel",
     "macOS": {
+      "minimumSystemVersion": "11.0",
+      "signingIdentity": "-",
+      "hardenedRuntime": true,
       "dmg": {
         "background": "installer/dmg-background.tiff",
         "windowSize": {

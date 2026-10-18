@@ -1,8 +1,8 @@
 //! OpenAI Chat Completions and compatible APIs (OpenRouter, Ollama, LM Studio, Groq...).
-use super::{check_status, parse_tool_input, push_text, sse, ChatRequest, ChatResult, Message, Part, Role};
+use super::{ChatRequest, ChatResult, Message, Part, Role, check_status, parse_tool_input, push_text, sse};
 use crate::error::{AppError, AppResult};
 use crate::keys;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 pub const DEFAULT_BASE: &str = "https://api.openai.com/v1";
 
@@ -24,10 +24,12 @@ pub fn build_body(req: &ChatRequest) -> Value {
         body["tools"] = req
             .tools
             .iter()
-            .map(|t| json!({
-                "type": "function",
-                "function": { "name": t.name, "description": t.description, "parameters": t.parameters },
-            }))
+            .map(|t| {
+                json!({
+                    "type": "function",
+                    "function": { "name": t.name, "description": t.description, "parameters": t.parameters },
+                })
+            })
             .collect();
     }
     if let Some(max) = req.max_tokens {
@@ -69,11 +71,8 @@ fn push_wire(out: &mut Vec<Value>, m: &Message) {
             out.push(json!({ "role": "user", "content": content }));
         }
         Role::Assistant => {
-            let text: String = m
-                .content
-                .iter()
-                .filter_map(|p| if let Part::Text { text } = p { Some(text.as_str()) } else { None })
-                .collect();
+            let text: String =
+                m.content.iter().filter_map(|p| if let Part::Text { text } = p { Some(text.as_str()) } else { None }).collect();
             let calls: Vec<Value> = m
                 .content
                 .iter()
@@ -159,16 +158,10 @@ impl StreamState {
     }
 }
 
-pub async fn chat(
-    client: &reqwest::Client,
-    req: &ChatRequest,
-    on_text: &mut (dyn FnMut(&str) + Send),
-) -> AppResult<ChatResult> {
+pub async fn chat(client: &reqwest::Client, req: &ChatRequest, on_text: &mut (dyn FnMut(&str) + Send)) -> AppResult<ChatResult> {
     // Local servers (Ollama, LM Studio) usually need no key.
-    let mut http = client
-        .post(format!("{}/chat/completions", base_url(req.base_url.as_deref())))
-        .header("X-Title", "KlikReel")
-        .json(&build_body(req));
+    let mut http =
+        client.post(format!("{}/chat/completions", base_url(req.base_url.as_deref()))).header("X-Title", "KlikReel").json(&build_body(req));
     if let Some(key) = keys::get(&req.profile_id)? {
         http = http.bearer_auth(key);
     }
@@ -211,10 +204,13 @@ mod tests {
     #[test]
     fn tool_results_become_tool_messages() {
         let mut out = Vec::new();
-        push_wire(&mut out, &Message {
-            role: Role::User,
-            content: vec![Part::ToolResult { id: "c1".into(), name: "x".into(), content: "done".into(), is_error: false }],
-        });
+        push_wire(
+            &mut out,
+            &Message {
+                role: Role::User,
+                content: vec![Part::ToolResult { id: "c1".into(), name: "x".into(), content: "done".into(), is_error: false }],
+            },
+        );
         assert_eq!(out.len(), 1);
         assert_eq!(out[0]["role"], "tool");
         assert_eq!(out[0]["tool_call_id"], "c1");

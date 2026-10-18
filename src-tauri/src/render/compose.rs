@@ -28,9 +28,15 @@ pub struct RenderJob {
     pub audio: Vec<AudioLayer>,
 }
 
-fn default_crf() -> u8 { 18 }
-fn default_preset() -> String { "medium".into() }
-fn default_bg() -> String { "black".into() }
+fn default_crf() -> u8 {
+    18
+}
+fn default_preset() -> String {
+    "medium".into()
+}
+fn default_bg() -> String {
+    "black".into()
+}
 
 /// A video or image clip, bottom-most first.
 #[derive(Deserialize, Debug, Clone)]
@@ -77,7 +83,9 @@ pub struct AudioLayer {
     pub fade_out: f64,
 }
 
-fn one() -> f64 { 1.0 }
+fn one() -> f64 {
+    1.0
+}
 
 fn even(v: f64) -> u32 {
     ((v / 2.0).round() as u32).max(1) * 2
@@ -102,16 +110,30 @@ pub fn ffmpeg_args(job: &RenderJob) -> Vec<String> {
         input - 1
     });
 
-    filters.push(format!(
-        "color=c={}:s={}x{}:r={}:d={:.3},format=yuv420p[base0]",
-        job.background, job.width, job.height, fps, job.duration
-    ));
+    filters
+        .push(format!("color=c={}:s={}x{}:r={}:d={:.3},format=yuv420p[base0]", job.background, job.width, job.height, fps, job.duration));
     let mut base = 0usize;
     for l in &job.media {
         if l.kind == "image" {
-            args.extend(["-loop".into(), "1".into(), "-framerate".into(), fps.to_string(), "-t".into(), format!("{:.3}", l.duration), "-i".into(), l.path.clone()]);
+            args.extend([
+                "-loop".into(),
+                "1".into(),
+                "-framerate".into(),
+                fps.to_string(),
+                "-t".into(),
+                format!("{:.3}", l.duration),
+                "-i".into(),
+                l.path.clone(),
+            ]);
         } else {
-            args.extend(["-ss".into(), format!("{:.3}", l.trim_in), "-t".into(), format!("{:.3}", l.duration), "-i".into(), l.path.clone()]);
+            args.extend([
+                "-ss".into(),
+                format!("{:.3}", l.trim_in),
+                "-t".into(),
+                format!("{:.3}", l.duration),
+                "-i".into(),
+                l.path.clone(),
+            ]);
         }
         let (w, h) = fit_size(job, l);
         let mut chain = format!("[{input}:v]setpts=PTS-STARTPTS,fps={fps},scale={w}:{h},format=rgba");
@@ -132,13 +154,18 @@ pub fn ffmpeg_args(job: &RenderJob) -> Vec<String> {
         filters.push(chain);
         filters.push(format!(
             "[base{base}][m{input}]overlay=x=(W-w)/2+{:.1}:y=(H-h)/2+{:.1}:eof_action=pass:enable='between(t,{:.3},{:.3})'[base{}]",
-            l.x, l.y, l.start, l.start + l.duration, base + 1
+            l.x,
+            l.y,
+            l.start,
+            l.start + l.duration,
+            base + 1
         ));
         base += 1;
         input += 1;
     }
     match overlay_input {
-        Some(i) => filters.push(format!("[{i}:v]format=rgba,setpts=PTS-STARTPTS[ov];[base{base}][ov]overlay=0:0:eof_action=pass,format=yuv420p[vout]")),
+        Some(i) => filters
+            .push(format!("[{i}:v]format=rgba,setpts=PTS-STARTPTS[ov];[base{base}][ov]overlay=0:0:eof_action=pass,format=yuv420p[vout]")),
         None => filters.push(format!("[base{base}]null[vout]")),
     }
 
@@ -174,9 +201,21 @@ pub fn ffmpeg_args(job: &RenderJob) -> Vec<String> {
         args.extend(["-map", "[aout]", "-c:a", "aac", "-b:a", "192k"].map(String::from));
     }
     args.extend([
-        "-c:v".into(), "libx264".into(), "-preset".into(), job.preset.clone(), "-crf".into(), job.crf.to_string(),
-        "-pix_fmt".into(), "yuv420p".into(), "-r".into(), fps.to_string(), "-t".into(), format!("{:.3}", job.duration),
-        "-movflags".into(), "+faststart".into(), job.output.clone(),
+        "-c:v".into(),
+        "libx264".into(),
+        "-preset".into(),
+        job.preset.clone(),
+        "-crf".into(),
+        job.crf.to_string(),
+        "-pix_fmt".into(),
+        "yuv420p".into(),
+        "-r".into(),
+        fps.to_string(),
+        "-t".into(),
+        format!("{:.3}", job.duration),
+        "-movflags".into(),
+        "+faststart".into(),
+        job.output.clone(),
     ]);
     args
 }

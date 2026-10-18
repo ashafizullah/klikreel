@@ -1,8 +1,8 @@
 //! Anthropic Messages API (raw HTTP, streaming).
-use super::{check_status, parse_tool_input, push_text, sse, ChatRequest, ChatResult, Message, Part, Role};
+use super::{ChatRequest, ChatResult, Message, Part, Role, check_status, parse_tool_input, push_text, sse};
 use crate::error::{AppError, AppResult};
 use crate::keys;
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 
 const DEFAULT_BASE: &str = "https://api.anthropic.com";
 /// Models that accept server-side refusal fallbacks (`fallbacks: "default"`).
@@ -26,12 +26,14 @@ pub fn build_body(req: &ChatRequest) -> Value {
         body["tools"] = req
             .tools
             .iter()
-            .map(|t| json!({
-                "name": t.name,
-                "description": t.description,
-                "input_schema": t.parameters,
-                "eager_input_streaming": true,
-            }))
+            .map(|t| {
+                json!({
+                    "name": t.name,
+                    "description": t.description,
+                    "input_schema": t.parameters,
+                    "eager_input_streaming": true,
+                })
+            })
             .collect();
     }
     if first_party(req) && FALLBACK_MODELS.contains(&req.model.as_str()) {
@@ -57,9 +59,7 @@ fn to_wire(m: &Message) -> Value {
                 "type": "image",
                 "source": { "type": "base64", "media_type": media_type, "data": data },
             })),
-            Part::ToolCall { id, name, input, .. } => {
-                blocks.push(json!({ "type": "tool_use", "id": id, "name": name, "input": input }))
-            }
+            Part::ToolCall { id, name, input, .. } => blocks.push(json!({ "type": "tool_use", "id": id, "name": name, "input": input })),
             Part::Opaque { provider, block } if provider == "anthropic" => blocks.push(block.clone()),
             _ => {}
         }
@@ -110,9 +110,7 @@ impl StreamState {
                         t.push_str(s);
                         return Ok(Some(s.to_string()));
                     }
-                    ("input_json_delta", Some(Block::Tool { json, .. })) => {
-                        json.push_str(d["partial_json"].as_str().unwrap_or(""))
-                    }
+                    ("input_json_delta", Some(Block::Tool { json, .. })) => json.push_str(d["partial_json"].as_str().unwrap_or("")),
                     ("thinking_delta", Some(Block::Other(b))) => append_str(b, "thinking", &d["thinking"]),
                     ("signature_delta", Some(Block::Other(b))) => append_str(b, "signature", &d["signature"]),
                     _ => {}
@@ -135,10 +133,7 @@ impl StreamState {
     pub fn finish(self) -> ChatResult {
         // After a mid-output fallback only text from before the last fallback
         // marker may be echoed back; the marker itself is dropped.
-        let last_fallback = self
-            .blocks
-            .iter()
-            .rposition(|(_, b)| matches!(b, Block::Other(v) if v["type"] == "fallback"));
+        let last_fallback = self.blocks.iter().rposition(|(_, b)| matches!(b, Block::Other(v) if v["type"] == "fallback"));
         let mut parts = Vec::new();
         for (pos, (_, block)) in self.blocks.into_iter().enumerate() {
             let before_boundary = last_fallback.is_some_and(|f| pos <= f);
@@ -149,12 +144,7 @@ impl StreamState {
                     }
                 }
                 _ if before_boundary => {}
-                Block::Tool { id, name, json } => parts.push(Part::ToolCall {
-                    id,
-                    name,
-                    input: parse_tool_input(&json),
-                    meta: None,
-                }),
+                Block::Tool { id, name, json } => parts.push(Part::ToolCall { id, name, input: parse_tool_input(&json), meta: None }),
                 Block::Other(block) => parts.push(Part::Opaque { provider: "anthropic".into(), block }),
             }
         }
@@ -175,11 +165,7 @@ fn append_str(block: &mut Value, key: &str, delta: &Value) {
     }
 }
 
-pub async fn chat(
-    client: &reqwest::Client,
-    req: &ChatRequest,
-    on_text: &mut (dyn FnMut(&str) + Send),
-) -> AppResult<ChatResult> {
+pub async fn chat(client: &reqwest::Client, req: &ChatRequest, on_text: &mut (dyn FnMut(&str) + Send)) -> AppResult<ChatResult> {
     let key = keys::require(&req.profile_id)?;
     let base = req.base_url.as_deref().filter(|b| !b.trim().is_empty()).unwrap_or(DEFAULT_BASE);
     let body = build_body(req);

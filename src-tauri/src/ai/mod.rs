@@ -94,9 +94,7 @@ pub struct ChatResult {
 pub fn validate_base_url(url: Option<&str>) -> AppResult<()> {
     let Some(url) = url.map(str::trim).filter(|u| !u.is_empty()) else { return Ok(()) };
     if !(url.starts_with("http://") || url.starts_with("https://")) {
-        return Err(AppError::msg(format!(
-            "Base URL must start with http:// or https:// (got {url}). For xAI use https://api.x.ai/v1"
-        )));
+        return Err(AppError::msg(format!("Base URL must start with http:// or https:// (got {url}). For xAI use https://api.x.ai/v1")));
     }
     Ok(())
 }
@@ -104,9 +102,7 @@ pub fn validate_base_url(url: Option<&str>) -> AppResult<()> {
 /// Streams a chat completion, calling `on_text` for every text delta.
 pub async fn chat(req: &ChatRequest, on_text: &mut (dyn FnMut(&str) + Send)) -> AppResult<ChatResult> {
     validate_base_url(req.base_url.as_deref())?;
-    let client = reqwest::Client::builder()
-        .connect_timeout(std::time::Duration::from_secs(20))
-        .build()?;
+    let client = reqwest::Client::builder().connect_timeout(std::time::Duration::from_secs(20)).build()?;
     match req.format.as_str() {
         "anthropic" => anthropic::chat(&client, req, on_text).await,
         "openai" => openai::chat(&client, req, on_text).await,
@@ -123,12 +119,7 @@ pub async fn check_status(resp: reqwest::Response) -> AppResult<reqwest::Respons
     let body = resp.text().await.unwrap_or_default();
     let detail = serde_json::from_str::<Value>(&body)
         .ok()
-        .and_then(|v| {
-            v.pointer("/error/message")
-                .or_else(|| v.pointer("/0/error/message"))
-                .and_then(Value::as_str)
-                .map(str::to_string)
-        })
+        .and_then(|v| v.pointer("/error/message").or_else(|| v.pointer("/0/error/message")).and_then(Value::as_str).map(str::to_string))
         .unwrap_or(body);
     Err(AppError::msg(format!("HTTP {status}: {detail}")))
 }

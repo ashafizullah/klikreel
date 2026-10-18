@@ -41,9 +41,8 @@ fn write_index(ids: &BTreeSet<String>) -> AppResult<()> {
 }
 
 fn validate(profile_id: &str) -> AppResult<()> {
-    let valid = !profile_id.is_empty()
-        && profile_id.len() <= 64
-        && profile_id.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-');
+    let valid =
+        !profile_id.is_empty() && profile_id.len() <= 64 && profile_id.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-');
     if valid { Ok(()) } else { Err(AppError::msg("Invalid profile id")) }
 }
 

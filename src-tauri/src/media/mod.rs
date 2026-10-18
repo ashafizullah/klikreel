@@ -43,10 +43,8 @@ fn parse_rate(r: &str) -> f64 {
 }
 
 pub async fn probe(path: &str) -> AppResult<MediaInfo> {
-    let out = run(Command::new(bin::ffprobe()?).args([
-        "-v", "error", "-print_format", "json", "-show_format", "-show_streams", path,
-    ]))
-    .await?;
+    let out =
+        run(Command::new(bin::ffprobe()?).args(["-v", "error", "-print_format", "json", "-show_format", "-show_streams", path])).await?;
     let v: Value = serde_json::from_slice(&out)?;
     let streams = v["streams"].as_array().cloned().unwrap_or_default();
     let video = streams.iter().find(|s| s["codec_type"] == "video" && s["disposition"]["attached_pic"] != 1);
@@ -81,11 +79,7 @@ fn cache_dir(kind: &str, path: &str) -> AppResult<PathBuf> {
     if let Ok(m) = std::fs::metadata(path).and_then(|m| m.modified()) {
         m.hash(&mut h);
     }
-    let dir = dirs::cache_dir()
-        .unwrap_or_else(std::env::temp_dir)
-        .join("klikreel")
-        .join(kind)
-        .join(format!("{:016x}", h.finish()));
+    let dir = dirs::cache_dir().unwrap_or_else(std::env::temp_dir).join("klikreel").join(kind).join(format!("{:016x}", h.finish()));
     std::fs::create_dir_all(&dir)?;
     Ok(dir)
 }
@@ -103,10 +97,23 @@ pub async fn thumbnails(path: &str, duration: f64, count: u32, height: u32) -> A
         let ffmpeg = ffmpeg.clone();
         let file = file.clone();
         async move {
-            run(Command::new(ffmpeg).args([
-                "-y", "-v", "error", "-ss", &format!("{t:.3}"), "-i", path, "-frames:v", "1",
-                "-vf", &format!("scale=-2:{height}"), "-q:v", "6",
-            ]).arg(&file))
+            run(Command::new(ffmpeg)
+                .args([
+                    "-y",
+                    "-v",
+                    "error",
+                    "-ss",
+                    &format!("{t:.3}"),
+                    "-i",
+                    path,
+                    "-frames:v",
+                    "1",
+                    "-vf",
+                    &format!("scale=-2:{height}"),
+                    "-q:v",
+                    "6",
+                ])
+                .arg(&file))
             .await
         }
     });
@@ -133,10 +140,8 @@ pub async fn retempo(path: &str, tempo: f64) -> AppResult<String> {
 
 /// Peak amplitude (0..1) per bucket over the whole file.
 pub async fn waveform(path: &str, buckets: usize) -> AppResult<Vec<f32>> {
-    let out = run(Command::new(bin::ffmpeg()?).args([
-        "-v", "error", "-i", path, "-vn", "-ac", "1", "-ar", "4000", "-f", "s16le", "-",
-    ]))
-    .await?;
+    let out =
+        run(Command::new(bin::ffmpeg()?).args(["-v", "error", "-i", path, "-vn", "-ac", "1", "-ar", "4000", "-f", "s16le", "-"])).await?;
     let samples: Vec<i16> = out.as_chunks::<2>().0.iter().map(|c| i16::from_le_bytes([c[0], c[1]])).collect();
     Ok(peaks(&samples, buckets))
 }
@@ -150,9 +155,7 @@ pub fn peaks(samples: &[i16], buckets: usize) -> Vec<f32> {
         .map(|b| {
             let start = (b as f64 * per) as usize;
             let end = (((b + 1) as f64 * per) as usize).min(samples.len());
-            samples.get(start..end).map_or(0.0, |s| {
-                s.iter().map(|x| x.unsigned_abs()).max().unwrap_or(0) as f32 / 32768.0
-            })
+            samples.get(start..end).map_or(0.0, |s| s.iter().map(|x| x.unsigned_abs()).max().unwrap_or(0) as f32 / 32768.0)
         })
         .collect()
 }

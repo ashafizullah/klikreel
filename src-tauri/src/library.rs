@@ -95,10 +95,8 @@ impl Library {
             if !meta.is_file() {
                 continue;
             }
-            let modified = meta.modified().ok()
-                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-                .map(|d| d.as_millis() as u64)
-                .unwrap_or(0);
+            let modified =
+                meta.modified().ok().and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok()).map(|d| d.as_millis() as u64).unwrap_or(0);
             out.push(MediaFile {
                 path: e.path().to_string_lossy().into_owned(),
                 name: e.file_name().to_string_lossy().into_owned(),
@@ -148,9 +146,9 @@ impl Library {
         }
         let ws = Workspace {
             id: format!("ws_{}", &uuid::Uuid::new_v4().simple().to_string()[..10]),
-            name: name.filter(|n| !n.trim().is_empty()).unwrap_or_else(|| {
-                canon.file_name().and_then(|n| n.to_str()).unwrap_or("Workspace").to_string()
-            }),
+            name: name
+                .filter(|n| !n.trim().is_empty())
+                .unwrap_or_else(|| canon.file_name().and_then(|n| n.to_str()).unwrap_or("Workspace").to_string()),
             path,
             created_at: now(),
         };
@@ -193,7 +191,10 @@ impl Library {
             if workspace_id.is_some_and(|w| w != ws) {
                 continue;
             }
-            let updated = file.metadata().and_then(|m| m.modified()).ok()
+            let updated = file
+                .metadata()
+                .and_then(|m| m.modified())
+                .ok()
                 .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
                 .map(|d| d.as_millis() as u64)
                 .unwrap_or(0);
@@ -248,7 +249,11 @@ mod tests {
         let lib = Library::new(root.clone());
         let ws = lib.add_workspace(std::env::temp_dir().to_str().unwrap(), None).unwrap();
         assert_eq!(lib.add_workspace(std::env::temp_dir().to_str().unwrap(), None).unwrap().id, ws.id);
-        lib.save_project("prj_1", &format!(r#"{{"id":"prj_1","name":"Promo","workspaceId":"{}","width":1080,"height":1920,"scenes":[{{}},{{}}]}}"#, ws.id)).unwrap();
+        lib.save_project(
+            "prj_1",
+            &format!(r#"{{"id":"prj_1","name":"Promo","workspaceId":"{}","width":1080,"height":1920,"scenes":[{{}},{{}}]}}"#, ws.id),
+        )
+        .unwrap();
         let list = lib.projects(Some(&ws.id)).unwrap();
         assert_eq!(list.len(), 1);
         assert_eq!(list[0].scenes, 2);

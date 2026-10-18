@@ -5,7 +5,7 @@ use crate::error::{AppError, AppResult};
 use crate::keys;
 use base64::Engine;
 use serde::Deserialize;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::path::Path;
 
 #[derive(Deserialize, Debug)]
@@ -55,7 +55,9 @@ pub fn openai_body(req: &TtsRequest) -> Value {
 
 /// Whether the text carries xAI speech tags (`[pause]`, `<whisper>…</whisper>`).
 pub fn has_speech_tags(text: &str) -> bool {
-    let inline = text.find('[').is_some_and(|i| text[i..].find(']').is_some_and(|j| text[i + 1..i + j].chars().all(|c| c.is_ascii_lowercase() || c == '-')));
+    let inline = text
+        .find('[')
+        .is_some_and(|i| text[i..].find(']').is_some_and(|j| text[i + 1..i + j].chars().all(|c| c.is_ascii_lowercase() || c == '-')));
     let wrap = text.contains("</");
     inline || wrap
 }
@@ -101,9 +103,7 @@ pub fn decode_audio(content_type: &str, bytes: &[u8]) -> AppResult<Vec<u8>> {
     }
     let v: Value = serde_json::from_slice(bytes)?;
     let b64 = v["audio"].as_str().ok_or_else(|| AppError::msg("Empty TTS response"))?;
-    base64::engine::general_purpose::STANDARD
-        .decode(b64)
-        .map_err(|e| AppError::msg(format!("Invalid TTS audio: {e}")))
+    base64::engine::general_purpose::STANDARD.decode(b64).map_err(|e| AppError::msg(format!("Invalid TTS audio: {e}")))
 }
 
 pub async fn synthesize(req: &TtsRequest, out: &Path) -> AppResult<()> {
@@ -126,12 +126,7 @@ pub async fn synthesize(req: &TtsRequest, out: &Path) -> AppResult<()> {
         }
     })
     .await?;
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("")
-        .to_string();
+    let content_type = resp.headers().get(reqwest::header::CONTENT_TYPE).and_then(|v| v.to_str().ok()).unwrap_or("").to_string();
     let audio = decode_audio(&content_type, &resp.bytes().await?)?;
     if audio.len() < 256 {
         return Err(AppError::msg("Empty TTS response"));
@@ -238,10 +233,10 @@ mod tests {
     #[test]
     fn parses_voice_lists() {
         let a = serde_json::json!({"voices":[{"voice_id":"eve","name":"Eve","language":"en"},{"id":"my_clone"}]});
-        assert_eq!(parse_voices(&a), vec![
-            VoiceOption { id: "eve".into(), name: "Eve".into() },
-            VoiceOption { id: "my_clone".into(), name: "my_clone".into() },
-        ]);
+        assert_eq!(
+            parse_voices(&a),
+            vec![VoiceOption { id: "eve".into(), name: "Eve".into() }, VoiceOption { id: "my_clone".into(), name: "my_clone".into() },]
+        );
         assert_eq!(parse_voices(&serde_json::json!(["rex"]))[0].id, "rex");
     }
 

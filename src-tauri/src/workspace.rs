@@ -7,8 +7,20 @@ use ignore::WalkBuilder;
 use std::path::{Component, Path, PathBuf};
 
 const HEAVY_DIRS: [&str; 14] = [
-    ".git", "node_modules", "vendor", "target", "dist", "build", ".next", ".nuxt", ".svelte-kit",
-    "coverage", "__pycache__", ".venv", "Pods", ".turbo",
+    ".git",
+    "node_modules",
+    "vendor",
+    "target",
+    "dist",
+    "build",
+    ".next",
+    ".nuxt",
+    ".svelte-kit",
+    "coverage",
+    "__pycache__",
+    ".venv",
+    "Pods",
+    ".turbo",
 ];
 const IMAGE_EXT: [&str; 6] = ["png", "jpg", "jpeg", "webp", "svg", "gif"];
 
@@ -173,15 +185,24 @@ pub fn overview(root: &str) -> AppResult<String> {
         }
     }
     for (name, max) in [
-        ("README.md", 8000usize), ("readme.md", 8000), ("README", 8000), ("package.json", 3000), ("composer.json", 3000),
-        ("Cargo.toml", 2000), ("pyproject.toml", 2000), ("go.mod", 1500), ("tailwind.config.js", 4000),
-        ("tailwind.config.ts", 4000), ("tailwind.config.cjs", 4000),
+        ("README.md", 8000usize),
+        ("readme.md", 8000),
+        ("README", 8000),
+        ("package.json", 3000),
+        ("composer.json", 3000),
+        ("Cargo.toml", 2000),
+        ("pyproject.toml", 2000),
+        ("go.mod", 1500),
+        ("tailwind.config.js", 4000),
+        ("tailwind.config.ts", 4000),
+        ("tailwind.config.cjs", 4000),
     ] {
         let p = root_c.join(name);
         if p.is_file()
-            && let Ok(t) = read_text(&p, max) {
-                s.push_str(&format!("\n## {name}\n{t}\n"));
-            }
+            && let Ok(t) = read_text(&p, max)
+        {
+            s.push_str(&format!("\n## {name}\n{t}\n"));
+        }
     }
     Ok(s)
 }
@@ -205,8 +226,17 @@ pub async fn image_data_uri(root: &str, rel: &str, max_width: u32) -> AppResult<
                 .args(["-v", "error", "-i"])
                 .arg(&path)
                 .args([
-                    "-frames:v", "1", "-vf", &format!("scale='min({max_width},iw)':-2"),
-                    "-f", "image2pipe", "-c:v", codec, "-q:v", "3", "-",
+                    "-frames:v",
+                    "1",
+                    "-vf",
+                    &format!("scale='min({max_width},iw)':-2"),
+                    "-f",
+                    "image2pipe",
+                    "-c:v",
+                    codec,
+                    "-q:v",
+                    "3",
+                    "-",
                 ])
                 .kill_on_drop(true)
                 .output()

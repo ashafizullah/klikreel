@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- The AI can now read your project folder everywhere in a project: in the revise chat and in scene prompts, not only when the storyboard is first written
+- Ask for a photo by name (e.g. "use the photo of our therapist") and the AI finds it in the project folder, attaches it to the scene and rebuilds the scene with it
+- The first storyboard now also considers photos of people, products and places in the project folder, not only logos and screenshots
+
 ## 0.1.0
 
 First public release.

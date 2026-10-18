@@ -1,17 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0.35" y2="1">
-      <stop offset="0" stop-color="#A855F7"/><stop offset="0.55" stop-color="#E11D74"/><stop offset="1" stop-color="#F97316"/>
+      <stop offset="0" stop-color="#3A3A40"/><stop offset="0.55" stop-color="#18181B"/><stop offset="1" stop-color="#0A0A0B"/>
     </linearGradient>
     <radialGradient id="glow" cx="0.3" cy="0.12" r="0.75">
-      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.35"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.18"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#bg)"/>
   <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#glow)"/>
   <rect x="101.5" y="101.5" width="821" height="821" rx="183.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="3"/>
   <!-- film-strip perforations -->
-  <g fill="#FFFFFF" fill-opacity="0.5">
+  <g fill="#FFFFFF" fill-opacity="0.38">
     <rect x="268" y="176" width="48" height="34" rx="10"/><rect x="356" y="176" width="48" height="34" rx="10"/><rect x="444" y="176" width="48" height="34" rx="10"/>
     <rect x="532" y="176" width="48" height="34" rx="10"/><rect x="620" y="176" width="48" height="34" rx="10"/><rect x="708" y="176" width="48" height="34" rx="10"/>
     <rect x="268" y="814" width="48" height="34" rx="10"/><rect x="356" y="814" width="48" height="34" rx="10"/><rect x="444" y="814" width="48" height="34" rx="10"/>

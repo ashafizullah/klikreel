@@ -51,13 +51,34 @@ impl FrameRenderer {
             ])
             .build()
             .map_err(cdp)?;
-        let (browser, mut handler) = Browser::launch(config).await.map_err(cdp)?;
+        let (mut browser, mut handler) = match Browser::launch(config).await {
+            Ok(b) => b,
+            Err(e) => {
+                remove_profile_later(profile);
+                return Err(cdp(e));
+            }
+        };
         let handler = tokio::spawn(async move { while handler.next().await.is_some() {} });
-        let page = browser.new_page("about:blank").await.map_err(cdp)?;
-        page.execute(SetDefaultBackgroundColorOverrideParams { color: Some(Rgba { r: 0, g: 0, b: 0, a: Some(0.0) }) })
-            .await
-            .map_err(cdp)?;
-        page.set_content(html).await.map_err(cdp)?;
+        let page = async {
+            let page = browser.new_page("about:blank").await.map_err(cdp)?;
+            page.execute(SetDefaultBackgroundColorOverrideParams { color: Some(Rgba { r: 0, g: 0, b: 0, a: Some(0.0) }) })
+                .await
+                .map_err(cdp)?;
+            page.set_content(html).await.map_err(cdp)?;
+            AppResult::Ok(page)
+        }
+        .await;
+        let page = match page {
+            Ok(p) => p,
+            Err(e) => {
+                let _ = browser.close().await;
+                let _ = browser.wait().await;
+                handler.abort();
+                remove_profile_later(profile);
+                return Err(e);
+            }
+        };
+        // From here on, Drop cleans up when an error skips close().
         let renderer = Self { browser, handler, page, _profile: profile };
         renderer.eval("window.__ready").await?;
         Ok(renderer)
@@ -89,4 +110,22 @@ impl FrameRenderer {
         self.handler.abort();
         let _ = std::fs::remove_dir_all(&self._profile);
     }
+}
+
+impl Drop for FrameRenderer {
+    /// Error paths drop the renderer without close(): Chrome is killed on drop, but its profile folder stays.
+    fn drop(&mut self) {
+        self.handler.abort();
+        if self._profile.exists() {
+            remove_profile_later(self._profile.clone());
+        }
+    }
+}
+
+/// Removes a Chrome profile folder once the (killed) browser has let go of it.
+fn remove_profile_later(profile: std::path::PathBuf) {
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_secs(2));
+        let _ = std::fs::remove_dir_all(profile);
+    });
 }

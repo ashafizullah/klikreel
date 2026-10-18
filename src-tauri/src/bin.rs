@@ -50,3 +50,52 @@ pub fn chrome() -> Option<PathBuf> {
         .find(|p| p.is_file())
         .or_else(|| ["google-chrome", "chromium", "chromium-browser"].iter().find_map(|n| find(n)))
 }
+
+const HOMEBREW_INSTALL: &str = r#"/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)""#;
+
+/// Shell command that installs a missing dependency ("ffmpeg" or "chrome"),
+/// using Homebrew on macOS (installing Homebrew first when it is missing).
+pub fn install_command(what: &str) -> Option<String> {
+    let package = match what {
+        "ffmpeg" => "ffmpeg",
+        "chrome" => "--cask google-chrome",
+        _ => return None,
+    };
+    if cfg!(target_os = "macos") {
+        return Some(match find("brew") {
+            Some(brew) => format!("{} install {package}", brew.display()),
+            None => format!("{HOMEBREW_INSTALL} && export PATH=\"/opt/homebrew/bin:/usr/local/bin:$PATH\" && brew install {package}"),
+        });
+    }
+    if cfg!(windows) {
+        return Some(if what == "ffmpeg" { "winget install --id Gyan.FFmpeg -e" } else { "winget install --id Google.Chrome -e" }.into());
+    }
+    Some(if what == "ffmpeg" { "sudo apt install ffmpeg" } else { "sudo apt install chromium" }.into())
+}
+
+/// Opens Terminal.app running `install_command(what)` (macOS only).
+pub fn install_in_terminal(what: &str) -> crate::error::AppResult<()> {
+    if !cfg!(target_os = "macos") {
+        return Err(crate::error::AppError::msg("Opening Terminal is only supported on macOS"));
+    }
+    let cmd = install_command(what).ok_or_else(|| crate::error::AppError::msg(format!("Unknown dependency: {what}")))?;
+    let escaped = cmd.replace('\\', "\\\\").replace('"', "\\\"");
+    let script = format!("tell application \"Terminal\"\nactivate\ndo script \"{escaped}\"\nend tell");
+    let status = std::process::Command::new("osascript").arg("-e").arg(script).status()?;
+    if !status.success() {
+        return Err(crate::error::AppError::msg("Could not open Terminal"));
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn install_commands_are_fixed() {
+        assert!(install_command("ffmpeg").unwrap().contains("ffmpeg"));
+        assert!(install_command("chrome").unwrap().contains("chrom"));
+        assert!(install_command("rm -rf /").is_none());
+    }
+}

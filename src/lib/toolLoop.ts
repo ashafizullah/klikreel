@@ -24,11 +24,15 @@ export async function runToolLoop(o: LoopOptions): Promise<string> {
   for (let step = 0; step < (o.maxSteps ?? 12); step++) {
     if (o.signal?.cancelled) return "cancelled";
     const res = await ipc.chat({ ...activeModel(), system: o.system, messages: o.history, tools: o.tools }, o.onText);
-    o.history.push(res.message);
-    o.onMessage?.(res.message);
-    if (res.stopReason === "refusal") return "refusal";
-    // Never run tools from a truncated turn: inputs may be incomplete.
-    if (res.stopReason === "max_tokens") return "max_tokens";
+    // Never run tools from a truncated or refused turn: inputs may be incomplete. Drop
+    // its tool calls too, or every later request fails on calls without results.
+    const stopped = res.stopReason === "refusal" || res.stopReason === "max_tokens";
+    const message = stopped ? { ...res.message, content: res.message.content.filter((p) => p.type !== "toolCall") } : res.message;
+    if (message.content.length) {
+      o.history.push(message);
+      o.onMessage?.(message);
+    }
+    if (stopped) return res.stopReason;
     const calls = res.message.content.filter((p): p is Extract<Part, { type: "toolCall" }> => p.type === "toolCall");
     if (calls.length === 0) return res.stopReason;
     const results: Part[] = [];

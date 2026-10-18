@@ -113,7 +113,10 @@ pub async fn synthesize(req: &TtsRequest, out: &Path) -> AppResult<()> {
     super::validate_base_url(req.base_url.as_deref())?;
     let base = super::openai::base_url(req.base_url.as_deref());
     let key = keys::get(&req.profile_id)?;
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .connect_timeout(std::time::Duration::from_secs(20))
+        .timeout(std::time::Duration::from_secs(120))
+        .build()?;
     let (url, body) = match some(&req.engine) {
         Some("xai") => (format!("{base}/tts"), xai_body(req)),
         _ => (format!("{base}/audio/speech"), openai_body(req)),
@@ -159,7 +162,10 @@ pub async fn list_voices(profile_id: &str, base_url: Option<&str>) -> AppResult<
     super::validate_base_url(base_url)?;
     let base = super::openai::base_url(base_url);
     let key = keys::get(profile_id)?;
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .connect_timeout(std::time::Duration::from_secs(20))
+        .timeout(std::time::Duration::from_secs(120))
+        .build()?;
     let fetch = |path: &str| {
         let http = client.get(format!("{base}{path}"));
         let http = match &key {

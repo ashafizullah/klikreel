@@ -24,7 +24,7 @@ mockIPC(async (cmd, args) => {
     case "api_keys_status":
       return Object.fromEntries((a.profileIds ?? []).map((id: string) => [id, true]));
     case "system_status":
-      return { ffmpeg: "(mock)", ffprobe: "(mock)", chrome: "(mock)" };
+      return { ffmpeg: "(mock)", ffprobe: "(mock)", chrome: "(mock)", os: "macos", ffmpegInstall: "brew install ffmpeg", chromeInstall: "brew install --cask google-chrome" };
     case "workspaces_list":
       return workspaces;
     case "workspace_add":

@@ -102,7 +102,11 @@ pub fn validate_base_url(url: Option<&str>) -> AppResult<()> {
 /// Streams a chat completion, calling `on_text` for every text delta.
 pub async fn chat(req: &ChatRequest, on_text: &mut (dyn FnMut(&str) + Send)) -> AppResult<ChatResult> {
     validate_base_url(req.base_url.as_deref())?;
-    let client = reqwest::Client::builder().connect_timeout(std::time::Duration::from_secs(20)).build()?;
+    // A stalled stream would otherwise hang the job forever (cancel is only checked between steps).
+    let client = reqwest::Client::builder()
+        .connect_timeout(std::time::Duration::from_secs(20))
+        .read_timeout(std::time::Duration::from_secs(120))
+        .build()?;
     match req.format.as_str() {
         "anthropic" => anthropic::chat(&client, req, on_text).await,
         "openai" => openai::chat(&client, req, on_text).await,

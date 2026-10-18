@@ -46,6 +46,10 @@ export interface SystemStatus {
   ffmpeg: string | null;
   ffprobe: string | null;
   chrome: string | null;
+  os: "macos" | "windows" | "linux" | string;
+  /** Command that installs ffmpeg (Homebrew on macOS). */
+  ffmpegInstall: string | null;
+  chromeInstall: string | null;
 }
 
 function textChannel(onText?: (t: string) => void) {
@@ -81,6 +85,7 @@ export const ipc = {
   waveform: (path: string, buckets: number) => invoke<number[]>("media_waveform", { path, buckets }),
 
   systemStatus: () => invoke<SystemStatus>("system_status"),
+  installInTerminal: (what: "ffmpeg" | "chrome") => invoke<void>("install_in_terminal", { what }),
   renderStart: (job: unknown, onEvent: (e: RenderEvent) => void) => {
     const ch = new Channel<RenderEvent>();
     ch.onmessage = onEvent;

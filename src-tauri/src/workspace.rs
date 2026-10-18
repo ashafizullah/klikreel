@@ -53,7 +53,13 @@ pub fn resolve(root: &str, rel: &str) -> AppResult<PathBuf> {
     if !canon.starts_with(&root) {
         return Err(AppError::msg("Paths outside the workspace are not allowed"));
     }
-    if is_secret(&canon) {
+    // Check every folder on the way too: .git/config or secrets/prod.json must not reach the AI.
+    let inside = canon.strip_prefix(&root).unwrap_or(&canon);
+    let blocked = inside.components().any(|c| {
+        let name = c.as_os_str().to_string_lossy();
+        heavy(&name) || is_secret(Path::new(name.as_ref()))
+    });
+    if blocked || is_secret(&canon) {
         return Err(AppError::msg("This file holds credentials and cannot be read"));
     }
     Ok(canon)
@@ -274,6 +280,11 @@ mod tests {
         assert!(!files.iter().any(|f| f.contains(".env") || f.contains("node_modules")));
         assert!(read_file(root, ".env", 100).is_err());
         assert!(read_file(root, "../etc/passwd", 100).is_err());
+        std::fs::create_dir_all(d.join(".git")).unwrap();
+        std::fs::write(d.join(".git/config"), "url = https://user:token@example.com").unwrap();
+        assert!(read_file(root, ".git/config", 100).is_err());
+        assert!(read_file(root, "node_modules/x/i.js", 100).is_err());
+        assert!(read_file(root, "src/invoice.ts", 100).is_ok());
         let hits = search(root, "sendinvoice", 10).unwrap();
         assert_eq!(hits, vec!["src/invoice.ts:1: export function sendInvoice() {}".to_string()]);
         assert!(overview(root).unwrap().contains("Invoicely"));

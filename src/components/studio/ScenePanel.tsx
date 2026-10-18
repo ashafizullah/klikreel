@@ -165,7 +165,7 @@ function SceneCard({ scene, index, count, start, selected }: { scene: Scene; ind
               <span className="label">{t("scenes.visualBrief")}</span>
               <textarea className="field h-20 resize-none text-[11px]" value={visual} onChange={(e) => setVisual(e.target.value)} onBlur={() => visual !== scene.visual && store.updateScene(scene.id, { visual })} />
             </label>
-            <NumberField label={t("scenes.duration")} suffix="s" min={1.5} max={60} value={scene.duration} onChange={(duration) => job("scenes.revisingLabel", () => reviseSceneDuration(scene.id, duration))} />
+            <NumberField label={t("scenes.duration")} suffix={t("common.seconds")} min={1.5} max={60} value={scene.duration} onChange={(duration) => job("scenes.revisingLabel", () => reviseSceneDuration(scene.id, duration))} />
             {scene.voiceScript && (
               <div>
                 <span className="label">{t("scenes.voiceScript")}</span>

@@ -5,6 +5,7 @@ import { DEFAULT_BRIEF, DEFAULT_TRANSFORM, trackAccepts } from "../types/project
 import { newId } from "../lib/ids";
 import { findClip, firstFreeSlot, overlaps, splitClip } from "../lib/timeline";
 import { moveSceneTo, relayout } from "../lib/scenes";
+import { t } from "../i18n";
 
 export function emptyProject(over: Partial<Project> = {}): Project {
   return {
@@ -31,7 +32,8 @@ export function emptyProject(over: Partial<Project> = {}): Project {
 
 /** Fills fields added after a project file was written. */
 export function normalizeProject(p: Project): Project {
-  return { ...emptyProject(), ...p, brief: { ...DEFAULT_BRIEF, ...(p.brief ?? {}) }, scenes: p.scenes ?? [], style: p.style ?? null };
+  // A job that was running when the project was saved never finishes after reopening.
+  return historySnapshot({ ...emptyProject(), ...p, brief: { ...DEFAULT_BRIEF, ...(p.brief ?? {}) }, scenes: p.scenes ?? [], style: p.style ?? null });
 }
 
 const TRACK_NAMES: Record<TrackKind, string> = { overlay: "Overlay", video: "Video", audio: "Audio" };
@@ -153,7 +155,7 @@ export const useProject = create<ProjectState>()(
         }
         const clip: Clip = {
           id,
-          name: c.name ?? "Klip",
+          name: c.name ?? t("track.clip"),
           start: Math.max(0, c.start),
           duration: c.duration,
           trimIn: c.trimIn ?? 0,

@@ -94,9 +94,10 @@ async function exec(name: string, a: ToolArgs): Promise<unknown> {
       const scenes = [...store.project.scenes];
       scenes.splice(Math.max(0, Math.min(scenes.length, n(a.position) ?? scenes.length)), 0, scene);
       store.setScenes(scenes);
-      if (scene.narration && store.project.brief.voiceEnabled) await generateVoice(scene.id);
+      // A failed voiceover is already on the activity log; still build the visual.
+      const voiceError = scene.narration && store.project.brief.voiceEnabled ? await generateVoice(scene.id).then(() => null, (e) => String(e)) : null;
       await generateSceneVisual(scene.id);
-      return { scene_id: scene.id };
+      return voiceError ? { scene_id: scene.id, voice_error: voiceError } : { scene_id: scene.id };
     }
     case "delete_scene":
       store.removeScene(requireScene(a.scene_id).id);

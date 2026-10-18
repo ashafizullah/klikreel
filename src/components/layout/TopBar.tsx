@@ -1,4 +1,5 @@
-import { ArrowLeft, Download, KeyRound, Clapperboard } from "lucide-react";
+import { ArrowLeft, Download, KeyRound } from "lucide-react";
+import logo from "../../assets/logo.png";
 import { useProject } from "../../store/project";
 import { useUi } from "../../store/ui";
 import { useApp } from "../../store/app";
@@ -17,9 +18,7 @@ export function TopBar() {
   return (
     <header className="flex h-12 shrink-0 items-center gap-2 border-b border-line bg-panel px-3" data-tauri-drag-region>
       <IconButton title={t("top.back")} onClick={closeProject}><ArrowLeft size={16} /></IconButton>
-      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-accent-2">
-        <Clapperboard size={15} className="text-black" />
-      </div>
+      <img src={logo} alt="" className="h-7 w-7" draggable={false} />
       <span className="truncate text-[12px] text-muted">{ws?.name ?? "Workspace"}</span>
       <span className="text-muted">/</span>
       <input

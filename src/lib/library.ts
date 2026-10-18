@@ -5,7 +5,9 @@ import { useImages } from "../store/images";
 import { useMediaCache } from "../store/media";
 import { usePlayback } from "../store/playback";
 import { useApp } from "../store/app";
-import { notifyError } from "../store/ui";
+import { notifyError, useUi } from "../store/ui";
+import { useProduction } from "../store/production";
+import { useChat } from "../store/chat";
 import { ipc } from "./ipc";
 import { MUSIC_ASSET_ID, relayout } from "./scenes";
 import { blobUrl, releaseBlobs } from "./media";
@@ -42,6 +44,7 @@ function enter(project: Project, images: Record<string, string>) {
   usePlayback.getState().pause();
   usePlayback.getState().seek(0);
   useImages.getState().replace(images);
+  useChat.getState().reset();
   useProject.getState().load(project, project.id);
   useProject.temporal.getState().clear();
   releaseBlobs();
@@ -71,7 +74,19 @@ export async function openProject(id: string) {
   }
 }
 
+/** Whether an AI job is still writing to the open project. */
+export function projectBusy(): boolean {
+  const prod = useProduction.getState();
+  const scenes = useProject.getState().project.scenes;
+  return prod.running || Object.keys(prod.busy).length > 0 || useChat.getState().busy || scenes.some((s) => s.status === "generating");
+}
+
 export async function closeProject() {
+  // Jobs write into whichever project is open, so leaving mid-job would corrupt the next one.
+  if (projectBusy()) {
+    useUi.getState().notify(t("top.backBusy"), "error");
+    return;
+  }
   clearTimeout(timer);
   if (useProject.getState().dirty) await saveNow().catch(notifyError);
   usePlayback.getState().pause();

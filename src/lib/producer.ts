@@ -9,7 +9,7 @@ import { ipc } from "./ipc";
 import { newId } from "./ids";
 import { runToolLoop, type ToolArgs } from "./toolLoop";
 import { exactFit, fitDuration, VOICE_LEAD, VOICE_TAIL } from "./scenes";
-import { t } from "../i18n";
+import { localizeMessage, t } from "../i18n";
 import { track } from "../store/activity";
 
 export type LogEntry = { kind: "info" | "tool" | "error" | "done"; text: string };
@@ -27,7 +27,7 @@ export function languageCode(language: string): string {
   return /^[a-z]{2}(-[a-z]{2})?$/i.test(l) ? language.trim() : "auto";
 }
 
-const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
+const errText = (e: unknown) => localizeMessage(e instanceof Error ? e.message : String(e));
 const kChars = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
 
 interface Storyboard {
@@ -492,7 +492,7 @@ export async function produceVideo(log: Log, signal: { cancelled: boolean }): Pr
       useImages.getState().put(path, await ipc.wsImage(ws, path));
       loaded.add(path);
     } catch (e) {
-      log({ kind: "error", text: t("prod.imageSkipped", { path, err: String(e) }) });
+      log({ kind: "error", text: t("prod.imageSkipped", { path, err: errText(e) }) });
     }
   }
 

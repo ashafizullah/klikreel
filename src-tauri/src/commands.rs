@@ -94,12 +94,28 @@ pub struct SystemStatus {
     ffmpeg: Option<String>,
     ffprobe: Option<String>,
     chrome: Option<String>,
+    /// "macos", "windows" or "linux".
+    os: &'static str,
+    ffmpeg_install: Option<String>,
+    chrome_install: Option<String>,
 }
 
 #[tauri::command]
 pub fn system_status() -> SystemStatus {
     let s = |p: Option<std::path::PathBuf>| p.map(|p| p.to_string_lossy().into_owned());
-    SystemStatus { ffmpeg: s(bin::find("ffmpeg")), ffprobe: s(bin::find("ffprobe")), chrome: s(bin::chrome()) }
+    SystemStatus {
+        ffmpeg: s(bin::find("ffmpeg")),
+        ffprobe: s(bin::find("ffprobe")),
+        chrome: s(bin::chrome()),
+        os: std::env::consts::OS,
+        ffmpeg_install: bin::install_command("ffmpeg"),
+        chrome_install: bin::install_command("chrome"),
+    }
+}
+
+#[tauri::command]
+pub async fn install_in_terminal(what: String) -> AppResult<()> {
+    tokio::task::spawn_blocking(move || bin::install_in_terminal(&what)).await.map_err(|e| AppError::msg(e.to_string()))?
 }
 
 #[derive(Default)]
@@ -234,6 +250,8 @@ pub async fn tts_voices(profile_id: String, base_url: Option<String>) -> AppResu
 #[tauri::command]
 pub async fn tts_preview(request: ai::tts::TtsRequest) -> AppResult<String> {
     let dir = dirs::cache_dir().unwrap_or_else(std::env::temp_dir).join("klikreel").join("voice-preview");
+    // Only the latest sample is played; don't let old ones pile up.
+    let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir)?;
     let out = dir.join(format!("{}.mp3", uuid::Uuid::new_v4().simple()));
     ai::tts::synthesize(&request, &out).await?;

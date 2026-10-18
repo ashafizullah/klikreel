@@ -88,10 +88,19 @@ pub async fn run(job: RenderJob, cancel: Arc<AtomicBool>, emit: impl Fn(RenderEv
         renderer.close().await;
     }
 
-    if cancel.load(Ordering::Relaxed) || feed_error.is_some() {
+    if feed_error.is_some() {
         let _ = child.kill().await;
     }
-    let status = child.wait().await?;
+    // ffmpeg may keep encoding long after the last frame (or with no HTML layer at all): stay cancellable.
+    let status = loop {
+        if cancel.load(Ordering::Relaxed) {
+            let _ = child.kill().await;
+        }
+        tokio::select! {
+            status = child.wait() => break status?,
+            _ = tokio::time::sleep(std::time::Duration::from_millis(200)) => {}
+        }
+    };
     let _ = progress.await;
     let err_text = stderr_task.await.unwrap_or_default();
     if cancel.load(Ordering::Relaxed) {

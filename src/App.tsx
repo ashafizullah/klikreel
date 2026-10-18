@@ -7,33 +7,36 @@ import { Preview } from "./components/preview/Preview";
 import { Timeline } from "./components/timeline/Timeline";
 import { SettingsDialog } from "./components/dialogs/SettingsDialog";
 import { ExportDialog } from "./components/dialogs/ExportDialog";
+import { SetupDialog } from "./components/dialogs/SetupDialog";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import { TooltipLayer } from "./components/ui/TooltipLayer";
 import { useUi } from "./store/ui";
 import { useApp } from "./store/app";
 import { useShortcuts } from "./lib/shortcuts";
+import { useT } from "./i18n";
 
 const CodeEditorDialog = lazy(() => import("./components/dialogs/CodeEditorDialog"));
 
 export default function App() {
   useShortcuts();
+  const t = useT();
   const view = useApp((s) => s.view);
   const dialog = useUi((s) => s.dialog);
   const toast = useUi((s) => s.toast);
   return (
     <div className="flex h-full flex-col">
       {view === "home" ? (
-        <ErrorBoundary name="Home"><Home /></ErrorBoundary>
+        <ErrorBoundary name={t("panel.home")}><Home /></ErrorBoundary>
       ) : (
         <>
           <TopBar />
           <div className="flex min-h-0 flex-1">
-            <ErrorBoundary name="Brief"><BriefPanel /></ErrorBoundary>
-            <ErrorBoundary name="Preview"><Preview /></ErrorBoundary>
-            <ErrorBoundary name="Scene"><ScenePanel /></ErrorBoundary>
+            <ErrorBoundary name={t("panel.brief")}><BriefPanel /></ErrorBoundary>
+            <ErrorBoundary name={t("panel.preview")}><Preview /></ErrorBoundary>
+            <ErrorBoundary name={t("panel.scene")}><ScenePanel /></ErrorBoundary>
           </div>
           <div className="h-[230px] shrink-0">
-            <ErrorBoundary name="Timeline"><Timeline /></ErrorBoundary>
+            <ErrorBoundary name={t("panel.timeline")}><Timeline /></ErrorBoundary>
           </div>
         </>
       )}
@@ -44,6 +47,7 @@ export default function App() {
           <CodeEditorDialog />
         </Suspense>
       )}
+      <SetupDialog />
       <TooltipLayer />
       {toast && (
         <div

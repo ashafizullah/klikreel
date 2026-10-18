@@ -34,6 +34,7 @@ pub fn run() {
             commands::media_bytes,
             commands::media_retempo,
             commands::system_status,
+            commands::install_in_terminal,
             commands::render_start,
             commands::render_cancel,
             commands::workspaces_list,

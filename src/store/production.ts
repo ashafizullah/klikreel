@@ -7,7 +7,7 @@ import { createLimiter } from "../lib/queue";
 /** Scene jobs started from the UI (regenerate, sync, voice…): at most 3 AI jobs at once. */
 const sceneQueue = createLimiter(3);
 import { useProject } from "./project";
-import { t, type Key } from "../i18n";
+import { localizeMessage, t, type Key } from "../i18n";
 
 interface ProductionState {
   running: boolean;
@@ -38,7 +38,7 @@ export const useProduction = create<ProductionState>()((set, get) => ({
     try {
       await produceVideo(push, signal);
     } catch (e) {
-      push({ kind: "error", text: String(e instanceof Error ? e.message : e) });
+      push({ kind: "error", text: localizeMessage(String(e instanceof Error ? e.message : e)) });
       // Leave scenes that never started in a retryable state.
       for (const s of useProject.getState().project.scenes)
         if (s.status === "pending" || s.status === "generating") useProject.getState().updateScene(s.id, { status: s.html ? "ready" : "error", error: s.html ? undefined : t("scenes.stopped") });
@@ -53,7 +53,7 @@ export const useProduction = create<ProductionState>()((set, get) => ({
       const failed = await generateMissingVoices(all);
       useActivity.getState().push(failed ? "error" : "done", failed ? t("prod.voicesFailed", { n: failed }) : t("prod.voicesDone"));
     } catch (e) {
-      useActivity.getState().push("error", e instanceof Error ? e.message : String(e));
+      useActivity.getState().push("error", localizeMessage(e instanceof Error ? e.message : String(e)));
     } finally {
       set({ running: false });
     }

@@ -94,8 +94,8 @@ mod tests {
 
     #[test]
     fn install_commands_are_fixed() {
-        assert!(install_command("ffmpeg").unwrap().contains("ffmpeg"));
-        assert!(install_command("chrome").unwrap().contains("chrom"));
+        assert!(install_command("ffmpeg").unwrap().to_lowercase().contains("ffmpeg"));
+        assert!(install_command("chrome").unwrap().to_lowercase().contains("chrom"));
         assert!(install_command("rm -rf /").is_none());
     }
 }

@@ -127,6 +127,9 @@ export interface Workspace {
   name: string;
   path: string;
   createdAt: number;
+  /** Video projects in this workspace and their total size on disk (bytes). */
+  projectCount?: number;
+  size?: number;
 }
 
 export interface ProjectMeta {
@@ -137,6 +140,8 @@ export interface ProjectMeta {
   height: number;
   scenes: number;
   updatedAt: number;
+  /** First generated scene, for the card preview. */
+  thumb: { html: string; duration: number; assets: Record<string, string> } | null;
   /** Bytes on disk (project file + generated media). */
   size: number;
 }

@@ -151,9 +151,28 @@ pub fn render_cancel(state: State<'_, RenderState>) {
 use crate::library::{Library, ProjectMeta, Workspace};
 use crate::workspace;
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceInfo {
+    #[serde(flatten)]
+    workspace: Workspace,
+    project_count: usize,
+    /// Bytes on disk of the workspace's video projects (the codebase folder itself is not counted).
+    size: u64,
+}
+
 #[tauri::command]
-pub fn workspaces_list(lib: State<'_, Library>) -> AppResult<Vec<Workspace>> {
-    lib.workspaces()
+pub fn workspaces_list(lib: State<'_, Library>) -> AppResult<Vec<WorkspaceInfo>> {
+    let projects = lib.projects(None)?;
+    Ok(lib
+        .workspaces()?
+        .into_iter()
+        .map(|w| {
+            let mine = projects.iter().filter(|p| p.workspace_id == w.id);
+            let (project_count, size) = mine.fold((0, 0), |(n, s), p| (n + 1, s + p.size));
+            WorkspaceInfo { workspace: w, project_count, size }
+        })
+        .collect())
 }
 
 #[tauri::command]

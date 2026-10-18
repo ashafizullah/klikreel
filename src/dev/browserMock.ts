@@ -30,7 +30,7 @@ mockIPC(async (cmd, args) => {
     case "workspace_add":
       return workspaces[0];
     case "projects_list":
-      return [...projects.values()].map((j) => JSON.parse(j)).map((p) => ({ id: p.id, name: p.name, workspaceId: p.workspaceId, width: p.width, height: p.height, scenes: p.scenes.length, updatedAt: Date.now(), size: JSON.stringify(p).length }));
+      return [...projects.values()].map((j) => JSON.parse(j)).map((p) => ({ id: p.id, name: p.name, workspaceId: p.workspaceId, width: p.width, height: p.height, scenes: p.scenes.length, updatedAt: Date.now(), size: JSON.stringify(p).length, thumb: null }));
     case "project_store":
       projects.set(a.id, a.json);
       return null;

@@ -36,6 +36,35 @@ pub struct ProjectMeta {
     pub updated_at: u64,
     /// Bytes on disk: project file plus generated media.
     pub size: u64,
+    /// First generated scene, for the project card preview.
+    pub thumb: Option<ProjectThumb>,
+}
+
+#[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectThumb {
+    pub html: String,
+    pub duration: f64,
+    /// Image data URIs the scene uses, keyed by asset name.
+    pub assets: serde_json::Map<String, Value>,
+}
+
+/// Skip images in card previews beyond this many bytes of data URIs.
+const THUMB_ASSET_BUDGET: usize = 3 * 1024 * 1024;
+
+fn project_thumb(v: &Value) -> Option<ProjectThumb> {
+    let scene = v["scenes"].as_array()?.iter().find(|s| s["html"].as_str().is_some_and(|h| !h.trim().is_empty()))?;
+    let mut assets = serde_json::Map::new();
+    let mut used = 0;
+    for (name, path) in scene["assetRefs"].as_object().into_iter().flatten() {
+        let Some(uri) = path.as_str().and_then(|p| v["images"][p].as_str()) else { continue };
+        if used + uri.len() > THUMB_ASSET_BUDGET {
+            continue;
+        }
+        used += uri.len();
+        assets.insert(name.clone(), Value::String(uri.to_string()));
+    }
+    Some(ProjectThumb { html: scene["html"].as_str()?.to_string(), duration: scene["duration"].as_f64().unwrap_or(4.0), assets })
 }
 
 /// Total size of all files under `dir`.
@@ -207,6 +236,7 @@ impl Library {
                 scenes: v["scenes"].as_array().map_or(0, |a| a.len()),
                 updated_at: updated,
                 size: dir_size(&e.path()),
+                thumb: project_thumb(&v),
             });
         }
         out.sort_by_key(|p| std::cmp::Reverse(p.updated_at));

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { open, ask } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
-import { Check, FolderPlus, Folder, FolderOpen, KeyRound, Pencil, Plus, Trash2, Film, ExternalLink, X } from "lucide-react";
+import { Check, FolderPlus, Folder, FolderOpen, KeyRound, Pencil, Plus, RefreshCw, Trash2, Film, ExternalLink, X } from "lucide-react";
+import { getVersion } from "@tauri-apps/api/app";
+import { checkForUpdate, useUpdate } from "../../lib/updater";
 import { useApp } from "../../store/app";
 import { notifyError, useUi } from "../../store/ui";
 import { ipc, type ProjectMeta, type Workspace } from "../../lib/ipc";
@@ -30,6 +32,18 @@ export function Home() {
   const [renaming, setRenaming] = useState<{ kind: "workspace" | "project"; id: string; name: string } | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const ws = workspaces.find((w) => w.id === workspaceId);
+  const [version, setVersion] = useState("");
+  const checkingUpdate = useUpdate((s) => s.checking);
+  useEffect(() => void getVersion().then(setVersion).catch(() => {}), []);
+
+  const manualUpdateCheck = async () => {
+    try {
+      const update = await checkForUpdate();
+      if (!update) useUi.getState().notify(t("update.upToDate", { version }));
+    } catch (e) {
+      useUi.getState().notify(`${t("update.failed")}\n${e instanceof Error ? e.message : String(e)}`, "error");
+    }
+  };
 
   // Selection belongs to one workspace's list.
   useEffect(() => setSelected(new Set()), [workspaceId]);
@@ -184,6 +198,17 @@ export function Home() {
           </Button>
           <LanguageToggle />
         </div>
+        <button
+          className="flex items-center justify-between border-t border-line px-4 py-2 text-[10px] text-muted hover:text-text disabled:opacity-60"
+          onClick={manualUpdateCheck}
+          disabled={checkingUpdate}
+          title={t("update.check")}
+        >
+          <span>KlikReel {version && `v${version}`}</span>
+          <span className="flex items-center gap-1">
+            <RefreshCw size={10} className={checkingUpdate ? "animate-spin" : ""} /> {t("update.check")}
+          </span>
+        </button>
       </aside>
 
       <main className="flex min-w-0 flex-1 flex-col">

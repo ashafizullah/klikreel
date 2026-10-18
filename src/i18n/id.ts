@@ -336,6 +336,16 @@ const id: Record<Key, string> = {
   "setup.later": "Nanti",
   "setup.ready": "Siap: ffmpeg dan browser sudah ditemukan.",
   "setup.stillMissing": "Masih belum ditemukan. Tunggu instalasi selesai, lalu cek lagi.",
+
+  // updates
+  "update.title": "KlikReel {version} sudah tersedia",
+  "update.body": "Versi kamu {current}. Pasang {version} sekarang? KlikReel akan dibuka ulang setelah selesai.",
+  "update.install": "Update dan buka ulang",
+  "update.later": "Nanti",
+  "update.downloading": "Mengunduh {done} dari {total}…",
+  "update.check": "Cek update",
+  "update.upToDate": "KlikReel kamu sudah versi terbaru ({version}).",
+  "update.failed": "Gagal mengecek update.",
 };
 
 export default id;

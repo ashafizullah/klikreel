@@ -37,6 +37,8 @@ reqwest = { version = "0.13.5", default-features = false, features = ["json", "s
 chromiumoxide = "0.9.1"
 keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"] }
 ignore = "0.4.33"
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration

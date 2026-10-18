@@ -8,6 +8,7 @@ import { Timeline } from "./components/timeline/Timeline";
 import { SettingsDialog } from "./components/dialogs/SettingsDialog";
 import { ExportDialog } from "./components/dialogs/ExportDialog";
 import { SetupDialog } from "./components/dialogs/SetupDialog";
+import { UpdateDialog } from "./components/dialogs/UpdateDialog";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import { TooltipLayer } from "./components/ui/TooltipLayer";
 import { useUi } from "./store/ui";
@@ -48,6 +49,7 @@ export default function App() {
         </Suspense>
       )}
       <SetupDialog />
+      <UpdateDialog />
       <TooltipLayer />
       {toast && (
         <div

@@ -351,6 +351,16 @@ const en = {
   "setup.later": "Later",
   "setup.ready": "All set: ffmpeg and the browser were found.",
   "setup.stillMissing": "Still not found. Wait for the installation to finish, then check again.",
+
+  // updates
+  "update.title": "KlikReel {version} is available",
+  "update.body": "You have {current}. Install {version} now? KlikReel restarts when it's done.",
+  "update.install": "Update and restart",
+  "update.later": "Later",
+  "update.downloading": "Downloading {done} of {total}…",
+  "update.check": "Check for updates",
+  "update.upToDate": "You're up to date. KlikReel {version} is the latest version.",
+  "update.failed": "Couldn't check for updates.",
 } as const;
 
 export default en;

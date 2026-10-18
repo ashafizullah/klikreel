@@ -12,4 +12,5 @@ First public release.
 - Right-click a workspace or project to open, rename, show in Finder or delete it
 - Each workspace shows how many projects it has and how much disk space they use
 - First-launch check for ffmpeg and Chrome, with a one-click Homebrew install on macOS
+- Checks for updates once a day (or from "Check for updates" on the home screen) and installs them in-app
 - English and Bahasa Indonesia

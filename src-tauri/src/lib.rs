@@ -55,6 +55,7 @@ pub fn run() {
             commands::ws_read_file,
             commands::ws_search,
             commands::ws_image,
+            commands::ws_images,
             commands::tts_generate,
             commands::tts_preview,
             commands::tts_voices,

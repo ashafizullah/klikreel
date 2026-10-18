@@ -8,6 +8,7 @@ import type { Message, ToolDef } from "./ipc";
 import { ipc } from "./ipc";
 import { newId } from "./ids";
 import { runToolLoop, type ToolArgs } from "./toolLoop";
+import { execWorkspaceTool, WORKSPACE_TOOLS } from "./workspaceTools";
 import { exactFit, fitDuration, VOICE_LEAD, VOICE_TAIL } from "./scenes";
 import { localizeMessage, t } from "../i18n";
 import { track } from "../store/activity";
@@ -41,21 +42,7 @@ interface Storyboard {
 
 const str = { type: "string" };
 const RESEARCH_TOOLS: ToolDef[] = [
-  {
-    name: "list_files",
-    description: "Lists files and folders (folders end with /) in the workspace codebase. Dependency and build folders are skipped.",
-    parameters: { type: "object", properties: { dir: { ...str, description: "Folder relative to the workspace root; empty for root" }, depth: { type: "number" } }, required: ["dir"] },
-  },
-  {
-    name: "read_file",
-    description: "Reads a text file from the workspace (first 60 KB).",
-    parameters: { type: "object", properties: { path: str }, required: ["path"] },
-  },
-  {
-    name: "search_code",
-    description: "Case-insensitive text search across the workspace. Returns path:line: text matches.",
-    parameters: { type: "object", properties: { query: str }, required: ["query"] },
-  },
+  ...WORKSPACE_TOOLS,
   {
     name: "submit_storyboard",
     description: "Submits the final storyboard. Call exactly once when research is done.",
@@ -111,7 +98,7 @@ function producerSystem(language: string, tone: string, target: number, width: n
   const wps = wordsPerSecond(language);
   return `You are a creative director producing a short promo video for the software product whose codebase is in the user's workspace.
 
-1. Research first. Use list_files, search_code and read_file to learn what the product does and, above all, the feature the user wants to promote: who it is for, the problem it solves, its key benefits, and the real UI labels, button texts and copy used in the code. Also look for brand colors (Tailwind config, CSS variables, theme files), a logo file and product screenshots. Stay focused: about 6 to 12 tool calls. Do not ask the user questions.
+1. Research first. Use list_files, search_code and read_file to learn what the product does and, above all, the feature the user wants to promote: who it is for, the problem it solves, its key benefits, and the real UI labels, button texts and copy used in the code. Also look for brand colors (Tailwind config, CSS variables, theme files), a logo file, product screenshots and photos that fit the story (team members, experts, products, places); the overview lists the workspace's images. Stay focused: about 6 to 12 tool calls. Do not ask the user questions.
 2. Then call submit_storyboard once.
 
 Storyboard rules:
@@ -439,14 +426,6 @@ async function research(log: Log, signal: { cancelled: boolean }): Promise<Story
   ];
   const exec = async (name: string, a: ToolArgs) => {
     switch (name) {
-      case "list_files":
-        return (await ipc.wsListFiles(ws, String(a.dir ?? ""), typeof a.depth === "number" ? a.depth : 2)).join("\n");
-      case "read_file":
-        return ipc.wsReadFile(ws, String(a.path));
-      case "search_code": {
-        const hits = await ipc.wsSearch(ws, String(a.query));
-        return hits.length ? hits.join("\n") : "No results.";
-      }
       case "submit_storyboard": {
         const sb = a as unknown as Storyboard;
         if (!Array.isArray(sb.scenes) || sb.scenes.length === 0) throw new Error("scenes must not be empty");
@@ -454,7 +433,7 @@ async function research(log: Log, signal: { cancelled: boolean }): Promise<Story
         return "Storyboard accepted.";
       }
       default:
-        throw new Error(`unknown tool: ${name}`);
+        return execWorkspaceTool(ws, name, a);
     }
   };
   const reason = await runToolLoop({

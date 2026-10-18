@@ -110,6 +110,7 @@ export const ipc = {
   wsReadFile: (workspaceId: string, path: string) => invoke<string>("ws_read_file", { workspaceId, path }),
   wsSearch: (workspaceId: string, query: string) => invoke<string[]>("ws_search", { workspaceId, query }),
   wsImage: (workspaceId: string, path: string, maxWidth?: number) => invoke<string>("ws_image", { workspaceId, path, maxWidth }),
+  wsImages: (workspaceId: string, query?: string) => invoke<string[]>("ws_images", { workspaceId, query }),
 
   ttsVoices: (profileId: string, baseUrl?: string | null) => invoke<{ id: string; name: string }[]>("tts_voices", { profileId, baseUrl }),
   ttsPreview: (request: { profileId: string; baseUrl?: string | null; engine?: string; text: string; model?: string; voice?: string; language?: string; speed?: number }) =>

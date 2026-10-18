@@ -243,6 +243,11 @@ pub fn ws_list_files(workspace_id: String, dir: String, depth: Option<usize>, li
 }
 
 #[tauri::command]
+pub fn ws_images(workspace_id: String, query: Option<String>, lib: State<'_, Library>) -> AppResult<Vec<String>> {
+    workspace::list_images(&ws_root(&lib, &workspace_id)?, query.as_deref().unwrap_or(""), 80)
+}
+
+#[tauri::command]
 pub fn ws_read_file(workspace_id: String, path: String, lib: State<'_, Library>) -> AppResult<String> {
     workspace::read_file(&ws_root(&lib, &workspace_id)?, &path, 60_000)
 }

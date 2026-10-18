@@ -6,6 +6,7 @@ import { usePlayback } from "../../store/playback";
 import { useProduction } from "../../store/production";
 import { useUi } from "../../store/ui";
 import { generateSceneVisual, generateVoice, reviseSceneDuration, syncSceneWithAI } from "../../lib/producer";
+import { editSceneWithAI } from "../../lib/agent";
 import { needsSync, sceneStarts, totalDuration, voiceTooLong } from "../../lib/scenes";
 import { formatTime } from "../../lib/time";
 import { NumberField } from "../ui";
@@ -139,7 +140,7 @@ function SceneCard({ scene, index, count, start, selected }: { scene: Scene; ind
               if (e.key === "Enter" && instruction.trim()) {
                 const text = instruction;
                 setInstruction("");
-                job("scenes.editing", () => generateSceneVisual(scene.id, text));
+                job("scenes.editing", () => editSceneWithAI(scene.id, text));
               }
             }}
           />
@@ -150,7 +151,7 @@ function SceneCard({ scene, index, count, start, selected }: { scene: Scene; ind
             onClick={() => {
               const text = instruction;
               setInstruction("");
-              job("scenes.editing", () => generateSceneVisual(scene.id, text));
+              job("scenes.editing", () => editSceneWithAI(scene.id, text));
             }}
           >
             <Wand2 size={13} />

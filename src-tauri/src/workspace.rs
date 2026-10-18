@@ -161,6 +161,30 @@ pub fn search(root: &str, query: &str, limit: usize) -> AppResult<Vec<String>> {
     Ok(out)
 }
 
+/// Image files in the workspace whose path contains `query` (all images when empty).
+pub fn list_images(root: &str, query: &str, limit: usize) -> AppResult<Vec<String>> {
+    let root_c = Path::new(root).canonicalize().map_err(|_| AppError::msg("Workspace folder not found"))?;
+    let q = query.trim().to_lowercase();
+    let mut out = Vec::new();
+    for entry in walker(&root_c, Some(8)).build().flatten() {
+        let p = entry.path();
+        let ext = p.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
+        if !IMAGE_EXT.contains(&ext.as_str()) || is_secret(p) {
+            continue;
+        }
+        let rel = rel_of(&root_c, p);
+        // Match "abdulah hubai" against "abdulah_hubai.png" too.
+        let norm = rel.to_lowercase().replace(['_', '-', '.', '/'], " ");
+        if q.is_empty() || q.split_whitespace().all(|w| norm.contains(w)) {
+            out.push(rel);
+            if out.len() >= limit {
+                break;
+            }
+        }
+    }
+    Ok(out)
+}
+
 /// A compact first look at the codebase for the research agent.
 pub fn overview(root: &str) -> AppResult<String> {
     let root_c = Path::new(root).canonicalize().map_err(|_| AppError::msg("Workspace folder not found"))?;
@@ -170,24 +194,29 @@ pub fn overview(root: &str) -> AppResult<String> {
         s.push('\n');
     }
     let mut images = Vec::new();
+    let mut photos = Vec::new();
     for entry in walker(&root_c, Some(6)).build().flatten() {
         let p = entry.path();
         let ext = p.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
         let name = p.file_name().and_then(|n| n.to_str()).unwrap_or("").to_lowercase();
-        if IMAGE_EXT.contains(&ext.as_str())
-            && ["logo", "brand", "icon", "screenshot", "hero", "og", "preview", "mockup"].iter().any(|k| name.contains(k))
-        {
-            images.push(rel_of(&root_c, p));
-            if images.len() >= 40 {
-                break;
+        if !IMAGE_EXT.contains(&ext.as_str()) {
+            continue;
+        }
+        if ["logo", "brand", "icon", "screenshot", "hero", "og", "preview", "mockup"].iter().any(|k| name.contains(k)) {
+            if images.len() < 40 {
+                images.push(rel_of(&root_c, p));
             }
+        } else if photos.len() < 60 && !name.starts_with("favicon") {
+            photos.push(rel_of(&root_c, p));
         }
     }
-    if !images.is_empty() {
-        s.push_str("\n## Candidate brand images\n");
-        for i in images {
-            s.push_str(&i);
-            s.push('\n');
+    for (title, list) in [("Candidate brand images", images), ("Other images (people, products, photos)", photos)] {
+        if !list.is_empty() {
+            s.push_str(&format!("\n## {title}\n"));
+            for i in list {
+                s.push_str(&i);
+                s.push('\n');
+            }
         }
     }
     for (name, max) in [
@@ -285,6 +314,10 @@ mod tests {
         assert!(read_file(root, ".git/config", 100).is_err());
         assert!(read_file(root, "node_modules/x/i.js", 100).is_err());
         assert!(read_file(root, "src/invoice.ts", 100).is_ok());
+        std::fs::create_dir_all(d.join("images")).unwrap();
+        std::fs::write(d.join("images/abdulah_hubai.png"), "png").unwrap();
+        assert_eq!(list_images(root, "Abdulah Hubai", 10).unwrap(), vec!["images/abdulah_hubai.png".to_string()]);
+        assert!(list_images(root, "", 10).unwrap().contains(&"images/abdulah_hubai.png".to_string()));
         let hits = search(root, "sendinvoice", 10).unwrap();
         assert_eq!(hits, vec!["src/invoice.ts:1: export function sendInvoice() {}".to_string()]);
         assert!(overview(root).unwrap().contains("Invoicely"));

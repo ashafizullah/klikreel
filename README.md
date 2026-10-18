@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src-tauri/icons/icon.png" width="128" alt="KlikReel icon">
+  <img src="design/icon.png" width="128" alt="KlikReel icon">
 </p>
 
 <h1 align="center">KlikReel</h1>

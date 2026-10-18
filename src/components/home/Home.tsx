@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { open, ask } from "@tauri-apps/plugin-dialog";
-import { Clapperboard, FolderPlus, Folder, KeyRound, Plus, Trash2, Film } from "lucide-react";
+import { FolderPlus, Folder, KeyRound, Plus, Trash2, Film } from "lucide-react";
 import { useApp } from "../../store/app";
 import { notifyError, useUi } from "../../store/ui";
 import { ipc } from "../../lib/ipc";
@@ -9,6 +9,7 @@ import { formatMB } from "../../lib/time";
 import { Button, Modal } from "../ui";
 import { LanguageToggle } from "../ui/LanguageToggle";
 import { useLocale, useT, type Key } from "../../i18n";
+import logo from "../../assets/logo.png";
 
 const FORMATS: { id: string; label: string; hint: Key; w: number; h: number }[] = [
   { id: "16:9", label: "16:9", hint: "home.format169", w: 1920, h: 1080 },
@@ -55,9 +56,7 @@ export function Home() {
     <div className="flex h-full">
       <aside className="flex w-64 shrink-0 flex-col border-r border-line bg-panel">
         <div className="flex h-14 items-center gap-2 border-b border-line px-4" data-tauri-drag-region>
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-accent-2">
-            <Clapperboard size={15} className="text-black" />
-          </div>
+          <img src={logo} alt="" className="h-8 w-8" draggable={false} />
           <span className="text-[13px] font-semibold">KlikReel</span>
         </div>
         <div className="flex items-center justify-between px-4 pt-4 pb-2">

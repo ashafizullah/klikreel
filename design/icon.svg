@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#A855F7"/><stop offset="0.55" stop-color="#E11D74"/><stop offset="1" stop-color="#F97316"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.3" cy="0.12" r="0.75">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.35"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#bg)"/>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#glow)"/>
+  <rect x="101.5" y="101.5" width="821" height="821" rx="183.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="3"/>
+  <!-- film-strip perforations -->
+  <g fill="#FFFFFF" fill-opacity="0.5">
+    <rect x="268" y="176" width="48" height="34" rx="10"/><rect x="356" y="176" width="48" height="34" rx="10"/><rect x="444" y="176" width="48" height="34" rx="10"/>
+    <rect x="532" y="176" width="48" height="34" rx="10"/><rect x="620" y="176" width="48" height="34" rx="10"/><rect x="708" y="176" width="48" height="34" rx="10"/>
+    <rect x="268" y="814" width="48" height="34" rx="10"/><rect x="356" y="814" width="48" height="34" rx="10"/><rect x="444" y="814" width="48" height="34" rx="10"/>
+    <rect x="532" y="814" width="48" height="34" rx="10"/><rect x="620" y="814" width="48" height="34" rx="10"/><rect x="708" y="814" width="48" height="34" rx="10"/>
+  </g>
+  <!-- KR monogram, same stroke system as KlikSnap -->
+  <g transform="translate(251 338) scale(1.45)" fill="none" stroke="#FFFFFF" stroke-width="42.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 0 V240 M150 0 L26 124 M84 92 L156 240"/>
+    <path d="M216 240 V0 H274 C316 0 340 26 340 62 C340 98 316 124 274 124 H216 M282 124 L340 240"/>
+  </g>
+</svg>

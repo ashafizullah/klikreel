@@ -233,7 +233,7 @@ pub async fn tts_voices(profile_id: String, base_url: Option<String>) -> AppResu
 /// Speaks a short sample for the settings "Test voice" button.
 #[tauri::command]
 pub async fn tts_preview(request: ai::tts::TtsRequest) -> AppResult<String> {
-    let dir = dirs::cache_dir().unwrap_or_else(std::env::temp_dir).join("ai-video-editor").join("voice-preview");
+    let dir = dirs::cache_dir().unwrap_or_else(std::env::temp_dir).join("klikreel").join("voice-preview");
     std::fs::create_dir_all(&dir)?;
     let out = dir.join(format!("{}.mp3", uuid::Uuid::new_v4().simple()));
     ai::tts::synthesize(&request, &out).await?;

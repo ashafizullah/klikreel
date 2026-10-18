@@ -167,7 +167,7 @@ pub async fn chat(
     // Local servers (Ollama, LM Studio) usually need no key.
     let mut http = client
         .post(format!("{}/chat/completions", base_url(req.base_url.as_deref())))
-        .header("X-Title", "AI Video Editor")
+        .header("X-Title", "KlikReel")
         .json(&build_body(req));
     if let Some(key) = keys::get(&req.profile_id)? {
         http = http.bearer_auth(key);

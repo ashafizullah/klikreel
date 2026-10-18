@@ -83,7 +83,7 @@ fn cache_dir(kind: &str, path: &str) -> AppResult<PathBuf> {
     }
     let dir = dirs::cache_dir()
         .unwrap_or_else(std::env::temp_dir)
-        .join("ai-video-editor")
+        .join("klikreel")
         .join(kind)
         .join(format!("{:016x}", h.finish()));
     std::fs::create_dir_all(&dir)?;

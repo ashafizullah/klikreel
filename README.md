@@ -1,15 +1,15 @@
 <p align="center">
-  <img src="src-tauri/icons/icon.png" width="128" alt="AI Video Editor icon">
+  <img src="src-tauri/icons/icon.png" width="128" alt="KlikReel icon">
 </p>
 
-<h1 align="center">AI Video Editor</h1>
+<h1 align="center">KlikReel</h1>
 
 <p align="center">
   A free, open-source desktop app that turns a prompt and your codebase into a narrated product promo video. Bring your own AI keys; projects stay on your machine.
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/ashafizullah/ai-video-editor?color=blue" alt="MIT License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/ashafizullah/klikreel?color=blue" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white" alt="Tauri 2">
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black" alt="React 19">
   <img src="https://img.shields.io/badge/Rust-stable-000000?logo=rust" alt="Rust">
@@ -55,7 +55,7 @@ Issues and pull requests are welcome. Please run `bun run typecheck`, `bun run t
 
 ## Support
 
-AI Video Editor is free. If it saves you time, **[buy me an AI token on Trakteer](https://trakteer.id/adamshafizullah/tip)** ☕🤖.
+KlikReel is free. If it saves you time, **[buy me an AI token on Trakteer](https://trakteer.id/adamshafizullah/tip)** ☕🤖.
 
 ## License
 

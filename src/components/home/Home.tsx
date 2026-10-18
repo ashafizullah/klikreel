@@ -58,7 +58,7 @@ export function Home() {
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-accent-2">
             <Clapperboard size={15} className="text-black" />
           </div>
-          <span className="text-[13px] font-semibold">AI Video Editor</span>
+          <span className="text-[13px] font-semibold">KlikReel</span>
         </div>
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
           <span className="label mb-0">{t("home.workspaces")}</span>

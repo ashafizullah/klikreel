@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "AI Video Editor",
+  "productName": "KlikReel",
   "version": "0.1.0",
   "identifier": "com.ashafizullah.aivideoeditor",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "AI Video Editor",
+        "title": "KlikReel",
         "width": 1440,
         "height": 900,
         "minWidth": 1100,

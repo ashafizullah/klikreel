@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.2
 
 - Exported videos keep your brand colors exact: scenes are converted with the BT.709 matrix and the MP4 is tagged as BT.709 with sRGB transfer, so players no longer shift colors (by up to 18 RGB levels before, at most 2 now)
 

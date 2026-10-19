@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Exported videos keep your brand colors exact: scenes are converted with the BT.709 matrix and the MP4 is tagged as BT.709 with sRGB transfer, so players no longer shift colors (by up to 18 RGB levels before, at most 2 now)
+
 ## 0.1.1
 
 - The AI can now read your project folder everywhere in a project: in the revise chat and in scene prompts, not only when the storyboard is first written

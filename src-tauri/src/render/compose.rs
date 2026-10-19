@@ -98,6 +98,14 @@ pub fn fit_size(job: &RenderJob, l: &MediaLayer) -> (u32, u32) {
     (even(nw * fit), even(nh * fit))
 }
 
+/// Layers are composited in RGB and converted to YUV once, at the end, with
+/// the BT.709 matrix the output is tagged with. ffmpeg's default (BT.601,
+/// untagged) makes players that assume BT.709 shift brand colors. Scenes are
+/// sRGB web pages: BT.709 primaries and matrix, sRGB transfer. Newer ffmpeg
+/// takes the tags from the frames, older from the output options below.
+const TO_YUV: &str = "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p,\
+setparams=colorspace=bt709:color_primaries=bt709:color_trc=iec61966-2-1:range=tv";
+
 pub fn ffmpeg_args(job: &RenderJob) -> Vec<String> {
     let mut args: Vec<String> = vec!["-y".into(), "-v".into(), "error".into(), "-nostats".into(), "-progress".into(), "pipe:1".into()];
     let mut filters: Vec<String> = Vec::new();
@@ -110,8 +118,7 @@ pub fn ffmpeg_args(job: &RenderJob) -> Vec<String> {
         input - 1
     });
 
-    filters
-        .push(format!("color=c={}:s={}x{}:r={}:d={:.3},format=yuv420p[base0]", job.background, job.width, job.height, fps, job.duration));
+    filters.push(format!("color=c={}:s={}x{}:r={}:d={:.3},format=rgba[base0]", job.background, job.width, job.height, fps, job.duration));
     let mut base = 0usize;
     for l in &job.media {
         if l.kind == "image" {
@@ -153,7 +160,7 @@ pub fn ffmpeg_args(job: &RenderJob) -> Vec<String> {
         chain += &format!(",setpts=PTS+{:.3}/TB[m{input}]", l.start);
         filters.push(chain);
         filters.push(format!(
-            "[base{base}][m{input}]overlay=x=(W-w)/2+{:.1}:y=(H-h)/2+{:.1}:eof_action=pass:enable='between(t,{:.3},{:.3})'[base{}]",
+            "[base{base}][m{input}]overlay=x=(W-w)/2+{:.1}:y=(H-h)/2+{:.1}:eof_action=pass:format=rgb:enable='between(t,{:.3},{:.3})'[base{}]",
             l.x,
             l.y,
             l.start,
@@ -164,9 +171,10 @@ pub fn ffmpeg_args(job: &RenderJob) -> Vec<String> {
         input += 1;
     }
     match overlay_input {
-        Some(i) => filters
-            .push(format!("[{i}:v]format=rgba,setpts=PTS-STARTPTS[ov];[base{base}][ov]overlay=0:0:eof_action=pass,format=yuv420p[vout]")),
-        None => filters.push(format!("[base{base}]null[vout]")),
+        Some(i) => filters.push(format!(
+            "[{i}:v]format=rgba,setpts=PTS-STARTPTS[ov];[base{base}][ov]overlay=0:0:eof_action=pass:format=rgb,{TO_YUV}[vout]"
+        )),
+        None => filters.push(format!("[base{base}]{TO_YUV}[vout]")),
     }
 
     let mut audio_labels = Vec::new();
@@ -209,6 +217,14 @@ pub fn ffmpeg_args(job: &RenderJob) -> Vec<String> {
         job.crf.to_string(),
         "-pix_fmt".into(),
         "yuv420p".into(),
+        "-colorspace".into(),
+        "bt709".into(),
+        "-color_primaries".into(),
+        "bt709".into(),
+        "-color_trc".into(),
+        "iec61966-2-1".into(),
+        "-color_range".into(),
+        "tv".into(),
         "-r".into(),
         fps.to_string(),
         "-t".into(),
@@ -255,6 +271,17 @@ mod tests {
         assert!(graph.contains("adelay=500:all=1"));
         assert!(args.contains(&"pipe:0".to_string()));
         assert_eq!(args.last().unwrap(), "/tmp/o.mp4");
+    }
+
+    #[test]
+    fn converts_to_tagged_bt709_once() {
+        let args = ffmpeg_args(&job());
+        let graph = &args[args.iter().position(|a| a == "-filter_complex").unwrap() + 1];
+        assert_eq!(graph.matches("format=yuv420p").count(), 1);
+        assert!(graph.contains(&format!("format=rgb,{TO_YUV}[vout]")));
+        let opt = |k: &str| &args[args.iter().position(|a| a == k).unwrap() + 1];
+        assert_eq!(opt("-colorspace"), "bt709");
+        assert_eq!(opt("-color_trc"), "iec61966-2-1");
     }
 
     #[test]

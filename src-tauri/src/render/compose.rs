@@ -65,6 +65,9 @@ pub struct MediaLayer {
     pub fade_in: f64,
     #[serde(default)]
     pub fade_out: f64,
+    /// YCbCr matrix for an untagged video, set by `media::color::prepare`.
+    #[serde(skip)]
+    pub color_matrix: Option<&'static str>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -143,7 +146,8 @@ pub fn ffmpeg_args(job: &RenderJob) -> Vec<String> {
             ]);
         }
         let (w, h) = fit_size(job, l);
-        let mut chain = format!("[{input}:v]setpts=PTS-STARTPTS,fps={fps},scale={w}:{h},format=rgba");
+        let matrix = l.color_matrix.map(|m| format!(":in_color_matrix={m}")).unwrap_or_default();
+        let mut chain = format!("[{input}:v]setpts=PTS-STARTPTS,fps={fps},scale={w}:{h}{matrix},format=rgba");
         if l.rotation.abs() > 0.01 {
             let r = l.rotation.to_radians();
             chain += &format!(",rotate={r:.5}:c=none:ow=rotw({r:.5}):oh=roth({r:.5})");

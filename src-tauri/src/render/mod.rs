@@ -21,11 +21,12 @@ pub enum RenderEvent {
     Done { output: String },
 }
 
-pub async fn run(job: RenderJob, cancel: Arc<AtomicBool>, emit: impl Fn(RenderEvent) + Send + Sync + 'static) -> AppResult<()> {
+pub async fn run(mut job: RenderJob, cancel: Arc<AtomicBool>, emit: impl Fn(RenderEvent) + Send + Sync + 'static) -> AppResult<()> {
     if job.duration <= 0.0 {
         return Err(AppError::msg("The timeline is empty"));
     }
     let emit = Arc::new(emit);
+    crate::media::color::prepare(&mut job).await;
     let renderer = match &job.composition_html {
         Some(html) => {
             emit(RenderEvent::Status { message: "Preparing headless Chrome…".into() });

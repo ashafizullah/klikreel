@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3
+
+- Screenshots and images with a color profile (such as Display P3 screenshots from macOS) are converted to sRGB on export, so they look the same as in the preview instead of washed out
+- Videos without color information are read as BT.709 when they are HD, like video players do, so their colors no longer shift on export
+- Scene frames are always captured in sRGB, whatever color profile your display uses
+
 ## 0.1.2
 
 - Exported videos keep your brand colors exact: scenes are converted with the BT.709 matrix and the MP4 is tagged as BT.709 with sRGB transfer, so players no longer shift colors (by up to 18 RGB levels before, at most 2 now)

@@ -1,6 +1,6 @@
 [package]
 name = "klikreel"
-version = "0.1.2"
+version = "0.1.3"
 description = "Turn a prompt and your codebase into a narrated product promo video"
 authors = ["Adam Suchi Hafizullah"]
 edition = "2024"
@@ -39,6 +39,8 @@ keyring = { version = "3", features = ["apple-native", "windows-native", "sync-s
 ignore = "0.4.33"
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
+image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "webp"] }
+moxcms = "0.9.1"
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration

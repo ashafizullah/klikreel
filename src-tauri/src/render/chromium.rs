@@ -48,6 +48,8 @@ impl FrameRenderer {
                 "--disable-renderer-backgrounding",
                 "--disable-backgrounding-occluded-windows",
                 "--font-render-hinting=none",
+                // Frames must carry the scenes' sRGB values, whatever the display's profile.
+                "--force-color-profile=srgb",
             ])
             .build()
             .map_err(cdp)?;

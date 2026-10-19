@@ -6,6 +6,8 @@ use serde_json::Value;
 use std::path::{Path, PathBuf};
 use tokio::process::Command;
 
+pub mod color;
+
 const IMAGE_EXT: [&str; 7] = ["png", "jpg", "jpeg", "webp", "gif", "bmp", "avif"];
 
 #[derive(Serialize, Debug)]

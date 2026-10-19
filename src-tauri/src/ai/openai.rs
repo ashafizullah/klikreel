@@ -16,8 +16,9 @@ pub fn build_body(req: &ChatRequest) -> Value {
     if let Some(system) = req.system.as_deref().filter(|s| !s.is_empty()) {
         messages.push(json!({ "role": "system", "content": system }));
     }
+    let gemini = is_gemini(req);
     for m in &req.messages {
-        push_wire(&mut messages, m);
+        push_wire(&mut messages, m, gemini);
     }
     let mut body = json!({ "model": req.model, "stream": true, "messages": messages });
     if !req.tools.is_empty() {
@@ -38,7 +39,15 @@ pub fn build_body(req: &ChatRequest) -> Value {
     body
 }
 
-fn push_wire(out: &mut Vec<Value>, m: &Message) {
+/// Gemini's endpoint rejects tool-call history without thought signatures.
+fn is_gemini(req: &ChatRequest) -> bool {
+    base_url(req.base_url.as_deref()).contains("generativelanguage.googleapis.com") || req.model.starts_with("gemini")
+}
+
+/// Gemini's documented placeholder for tool calls it did not produce (e.g. made by another provider).
+const GEMINI_SKIP_SIGNATURE: &str = "skip_thought_signature_validator";
+
+fn push_wire(out: &mut Vec<Value>, m: &Message, gemini: bool) {
     match m.role {
         Role::User => {
             // Tool results become `tool` messages that must directly follow the assistant turn.
@@ -73,18 +82,32 @@ fn push_wire(out: &mut Vec<Value>, m: &Message) {
         Role::Assistant => {
             let text: String =
                 m.content.iter().filter_map(|p| if let Part::Text { text } = p { Some(text.as_str()) } else { None }).collect();
-            let calls: Vec<Value> = m
+            let mut calls: Vec<Value> = m
                 .content
                 .iter()
                 .filter_map(|p| match p {
-                    Part::ToolCall { id, name, input, .. } => Some(json!({
-                        "id": id,
-                        "type": "function",
-                        "function": { "name": name, "arguments": input.to_string() },
-                    })),
+                    Part::ToolCall { id, name, input, meta } => {
+                        let mut call = json!({
+                            "id": id,
+                            "type": "function",
+                            "function": { "name": name, "arguments": input.to_string() },
+                        });
+                        // Echo provider extras (Gemini's thought_signature lives in extra_content).
+                        if let Some(extra) = meta.as_ref().and_then(|m| m.get("extra_content")) {
+                            call["extra_content"] = extra.clone();
+                        }
+                        Some(call)
+                    }
                     _ => None,
                 })
                 .collect();
+            // Gemini only signs the first of parallel calls; history from other providers has none.
+            if gemini
+                && !calls.iter().any(|c| c.pointer("/extra_content/google/thought_signature").is_some())
+                && let Some(first) = calls.first_mut()
+            {
+                first["extra_content"] = json!({ "google": { "thought_signature": GEMINI_SKIP_SIGNATURE } });
+            }
             let mut msg = json!({ "role": "assistant", "content": if text.is_empty() { Value::Null } else { json!(text) } });
             if !calls.is_empty() {
                 msg["tool_calls"] = json!(calls);
@@ -97,7 +120,7 @@ fn push_wire(out: &mut Vec<Value>, m: &Message) {
 #[derive(Default)]
 pub struct StreamState {
     parts: Vec<Part>,
-    calls: Vec<(u64, String, String, String)>, // index, id, name, arguments
+    calls: Vec<(u64, String, String, String, Option<Value>)>, // index, id, name, arguments, extra_content
     finish: Option<String>,
 }
 
@@ -117,7 +140,7 @@ impl StreamState {
             let pos = match self.calls.iter().position(|c| c.0 == index) {
                 Some(p) => p,
                 None => {
-                    self.calls.push((index, String::new(), String::new(), String::new()));
+                    self.calls.push((index, String::new(), String::new(), String::new(), None));
                     self.calls.len() - 1
                 }
             };
@@ -131,6 +154,9 @@ impl StreamState {
             if let Some(args) = tc["function"]["arguments"].as_str() {
                 call.3.push_str(args);
             }
+            if let Some(extra) = tc.get("extra_content").filter(|v| !v.is_null()) {
+                call.4 = Some(extra.clone());
+            }
         }
         match delta["content"].as_str() {
             Some(t) if !t.is_empty() => {
@@ -143,9 +169,10 @@ impl StreamState {
 
     pub fn finish(mut self) -> ChatResult {
         let has_calls = !self.calls.is_empty();
-        for (i, (_, id, name, args)) in self.calls.into_iter().enumerate() {
+        for (i, (_, id, name, args, extra)) in self.calls.into_iter().enumerate() {
             let id = if id.is_empty() { format!("call_{i}_{}", uuid::Uuid::new_v4().simple()) } else { id };
-            self.parts.push(Part::ToolCall { id, name, input: parse_tool_input(&args), meta: None });
+            let meta = extra.map(|e| json!({ "extra_content": e }));
+            self.parts.push(Part::ToolCall { id, name, input: parse_tool_input(&args), meta });
         }
         let stop_reason = match self.finish.as_deref() {
             _ if has_calls => "tool_use".to_string(),
@@ -210,9 +237,37 @@ mod tests {
                 role: Role::User,
                 content: vec![Part::ToolResult { id: "c1".into(), name: "x".into(), content: "done".into(), is_error: false }],
             },
+            false,
         );
         assert_eq!(out.len(), 1);
         assert_eq!(out[0]["role"], "tool");
         assert_eq!(out[0]["tool_call_id"], "c1");
+    }
+
+    #[test]
+    fn echoes_gemini_thought_signature() {
+        let mut s = StreamState::default();
+        s.handle(&json!({"choices":[{"delta":{"tool_calls":[{"index":0,"id":"c1","extra_content":{"google":{"thought_signature":"sig"}},"function":{"name":"list_files","arguments":"{}"}}]}}]})).unwrap();
+        s.handle(&json!({"choices":[{"delta":{"tool_calls":[{"index":1,"id":"c2","function":{"name":"read_file","arguments":"{}"}}]}}]}))
+            .unwrap();
+        let msg = s.finish().message;
+        let mut out = Vec::new();
+        push_wire(&mut out, &msg, true);
+        let calls = &out[0]["tool_calls"];
+        assert_eq!(calls[0]["extra_content"]["google"]["thought_signature"], "sig");
+        assert!(calls[1].get("extra_content").is_none());
+    }
+
+    #[test]
+    fn unsigned_history_gets_placeholder_for_gemini_only() {
+        let msg = Message {
+            role: Role::Assistant,
+            content: vec![Part::ToolCall { id: "c1".into(), name: "list_files".into(), input: json!({}), meta: None }],
+        };
+        let (mut g, mut o) = (Vec::new(), Vec::new());
+        push_wire(&mut g, &msg, true);
+        push_wire(&mut o, &msg, false);
+        assert_eq!(g[0]["tool_calls"][0]["extra_content"]["google"]["thought_signature"], GEMINI_SKIP_SIGNATURE);
+        assert!(o[0]["tool_calls"][0].get("extra_content").is_none());
     }
 }

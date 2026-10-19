@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+- Google Gemini works with tools again: the AI no longer fails with "Function call is missing a thought_signature" after reading your project folder, including in projects started with another AI provider
+
 ## 0.1.3
 
 - Screenshots and images with a color profile (such as Display P3 screenshots from macOS) are converted to sRGB on export, so they look the same as in the preview instead of washed out

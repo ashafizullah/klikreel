@@ -106,7 +106,9 @@ pub fn fit_size(job: &RenderJob, l: &MediaLayer) -> (u32, u32) {
 /// untagged) makes players that assume BT.709 shift brand colors. Scenes are
 /// sRGB web pages: BT.709 primaries and matrix, sRGB transfer. Newer ffmpeg
 /// takes the tags from the frames, older from the output options below.
-const TO_YUV: &str = "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p,\
+/// Chroma is sited left (MPEG-2), which players assume for untagged H.264;
+/// swscale's default is center, a half-pixel shift on sharp color edges.
+const TO_YUV: &str = "scale=out_color_matrix=bt709:out_range=tv:out_h_chr_pos=0:out_v_chr_pos=128,format=yuv420p,\
 setparams=colorspace=bt709:color_primaries=bt709:color_trc=iec61966-2-1:range=tv";
 
 pub fn ffmpeg_args(job: &RenderJob) -> Vec<String> {
@@ -229,6 +231,8 @@ pub fn ffmpeg_args(job: &RenderJob) -> Vec<String> {
         "iec61966-2-1".into(),
         "-color_range".into(),
         "tv".into(),
+        "-chroma_sample_location".into(),
+        "left".into(),
         "-r".into(),
         fps.to_string(),
         "-t".into(),
@@ -286,6 +290,8 @@ mod tests {
         let opt = |k: &str| &args[args.iter().position(|a| a == k).unwrap() + 1];
         assert_eq!(opt("-colorspace"), "bt709");
         assert_eq!(opt("-color_trc"), "iec61966-2-1");
+        assert!(graph.contains("out_h_chr_pos=0:out_v_chr_pos=128"));
+        assert_eq!(opt("-chroma_sample_location"), "left");
     }
 
     #[test]

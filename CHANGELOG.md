@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5
+
+- Sharp color edges such as text and logos stay crisp on export: color detail is now positioned where video players expect it (left-sited chroma) and the MP4 is tagged accordingly, instead of sitting half a pixel off
+
 ## 0.1.4
 
 - Google Gemini works with tools again: the AI no longer fails with "Function call is missing a thought_signature" after reading your project folder, including in projects started with another AI provider

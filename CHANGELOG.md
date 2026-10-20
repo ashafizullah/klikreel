@@ -1,8 +1,12 @@
 # Changelog
 
+## 0.1.6
+
+- New "Full color (4:4:4)" export option: colored text and logo edges no longer bleed into their surroundings. Off by default, because many phones, TVs and browsers can't play 4:4:4 video
+
 ## 0.1.5
 
-- Sharp color edges such as text and logos stay crisp on export: color detail is now positioned where video players expect it (left-sited chroma) and the MP4 is tagged accordingly, instead of sitting half a pixel off
+- Color detail on export is now positioned where video players expect it (left-sited chroma) and the MP4 is tagged accordingly, so sharp color edges no longer sit half a pixel off to one side. Some color bleed around colored text remains in standard exports; 0.1.6 adds a full-color option that removes it
 
 ## 0.1.4
 

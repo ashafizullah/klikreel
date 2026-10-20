@@ -7,6 +7,8 @@ export interface RenderOptions {
   output: string;
   crf: number;
   preset: string;
+  /** 4:4:4 chroma: crisp color edges, limited player support. */
+  fullColor: boolean;
 }
 
 export function buildRenderJob(p: Project, opts: RenderOptions) {
@@ -55,6 +57,7 @@ export function buildRenderJob(p: Project, opts: RenderOptions) {
     output: opts.output,
     crf: opts.crf,
     preset: opts.preset,
+    fullColor: opts.fullColor,
     background: p.background,
     compositionHtml: comp?.html ?? null,
     overlayRanges: comp?.ranges ?? [],

@@ -194,6 +194,8 @@ const en = {
   "export.fast": "Fast",
   "export.balanced": "Balanced",
   "export.slow": "Slow (smaller file)",
+  "export.fullColor": "Full color (4:4:4)",
+  "export.fullColorHint": "Keeps colored text and logo edges crisp. Larger file, and many phones, TVs and browsers can't play it; use for editing or upload to sites that re-encode.",
   "export.preparing": "Preparing…",
   "export.doneIn": "Finished in {s} s",
   "export.reveal": "Show in Finder",

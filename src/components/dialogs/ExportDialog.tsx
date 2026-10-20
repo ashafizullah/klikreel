@@ -24,6 +24,7 @@ export function ExportDialog() {
   const project = useProject((s) => s.project);
   const [crf, setCrf] = useState(18);
   const [preset, setPreset] = useState("medium");
+  const [fullColor, setFullColor] = useState(false);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const duration = projectDuration(project);
   const running = phase.kind === "running";
@@ -35,7 +36,7 @@ export function ExportDialog() {
     const startedAt = Date.now();
     setPhase({ kind: "running", status: t("export.preparing"), ratio: 0, startedAt });
     try {
-      await ipc.renderStart(buildRenderJob(project, { output, crf, preset }), (e) => {
+      await ipc.renderStart(buildRenderJob(project, { output, crf, preset, fullColor }), (e) => {
         setPhase((p) => {
           if (p.kind !== "running") return p;
           if (e.type === "status") return { ...p, status: localizeMessage(e.message) };
@@ -73,6 +74,13 @@ export function ExportDialog() {
             </select>
           </label>
         </div>
+        <label className="flex items-start gap-2 rounded-md border border-line p-2 text-[12px]">
+          <input type="checkbox" className="mt-0.5 accent-[var(--color-accent)]" checked={fullColor} disabled={running} onChange={(e) => setFullColor(e.target.checked)} />
+          <span>
+            <span className="font-medium">{t("export.fullColor")}</span>
+            <span className="mt-0.5 block text-[11px] text-muted">{t("export.fullColorHint")}</span>
+          </span>
+        </label>
 
         {phase.kind === "running" && (
           <div>

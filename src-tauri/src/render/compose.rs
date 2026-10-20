@@ -16,6 +16,10 @@ pub struct RenderJob {
     pub preset: String,
     #[serde(default = "default_bg")]
     pub background: String,
+    /// 4:4:4 instead of 4:2:0: no color bleed on sharp edges, but the High
+    /// 4:4:4 profile does not play on many phones, TVs and browsers.
+    #[serde(default)]
+    pub full_color: bool,
     /// Composition page for HTML/text layers; None when the project has none.
     #[serde(default)]
     pub composition_html: Option<String>,
@@ -106,16 +110,23 @@ pub fn fit_size(job: &RenderJob, l: &MediaLayer) -> (u32, u32) {
 /// untagged) makes players that assume BT.709 shift brand colors. Scenes are
 /// sRGB web pages: BT.709 primaries and matrix, sRGB transfer. Newer ffmpeg
 /// takes the tags from the frames, older from the output options below.
-/// Chroma is sited left (MPEG-2), which players assume for untagged H.264;
-/// swscale's default is center, a half-pixel shift on sharp color edges.
-const TO_YUV: &str = "scale=out_color_matrix=bt709:out_range=tv:out_h_chr_pos=0:out_v_chr_pos=128,format=yuv420p,\
-setparams=colorspace=bt709:color_primaries=bt709:color_trc=iec61966-2-1:range=tv";
+/// 4:2:0 chroma is sited left (MPEG-2), which players assume for untagged
+/// H.264; swscale's default is center, a half-pixel shift on sharp color
+/// edges. 4:4:4 has a chroma sample per pixel, so siting does not apply.
+fn to_yuv(job: &RenderJob) -> String {
+    let (siting, pix_fmt) = if job.full_color { ("", "yuv444p") } else { (":out_h_chr_pos=0:out_v_chr_pos=128", "yuv420p") };
+    format!(
+        "scale=out_color_matrix=bt709:out_range=tv{siting},format={pix_fmt},\
+setparams=colorspace=bt709:color_primaries=bt709:color_trc=iec61966-2-1:range=tv"
+    )
+}
 
 pub fn ffmpeg_args(job: &RenderJob) -> Vec<String> {
     let mut args: Vec<String> = vec!["-y".into(), "-v".into(), "error".into(), "-nostats".into(), "-progress".into(), "pipe:1".into()];
     let mut filters: Vec<String> = Vec::new();
     let mut input = 0usize;
     let fps = job.fps;
+    let to_yuv = to_yuv(job);
 
     let overlay_input = job.composition_html.as_ref().map(|_| {
         args.extend(["-f", "image2pipe", "-framerate", &fps.to_string(), "-c:v", "png", "-i", "pipe:0"].map(String::from));
@@ -178,9 +189,9 @@ pub fn ffmpeg_args(job: &RenderJob) -> Vec<String> {
     }
     match overlay_input {
         Some(i) => filters.push(format!(
-            "[{i}:v]format=rgba,setpts=PTS-STARTPTS[ov];[base{base}][ov]overlay=0:0:eof_action=pass:format=rgb,{TO_YUV}[vout]"
+            "[{i}:v]format=rgba,setpts=PTS-STARTPTS[ov];[base{base}][ov]overlay=0:0:eof_action=pass:format=rgb,{to_yuv}[vout]"
         )),
-        None => filters.push(format!("[base{base}]{TO_YUV}[vout]")),
+        None => filters.push(format!("[base{base}]{to_yuv}[vout]")),
     }
 
     let mut audio_labels = Vec::new();
@@ -222,7 +233,7 @@ pub fn ffmpeg_args(job: &RenderJob) -> Vec<String> {
         "-crf".into(),
         job.crf.to_string(),
         "-pix_fmt".into(),
-        "yuv420p".into(),
+        (if job.full_color { "yuv444p" } else { "yuv420p" }).into(),
         "-colorspace".into(),
         "bt709".into(),
         "-color_primaries".into(),
@@ -231,8 +242,11 @@ pub fn ffmpeg_args(job: &RenderJob) -> Vec<String> {
         "iec61966-2-1".into(),
         "-color_range".into(),
         "tv".into(),
-        "-chroma_sample_location".into(),
-        "left".into(),
+    ]);
+    if !job.full_color {
+        args.extend(["-chroma_sample_location".into(), "left".into()]);
+    }
+    args.extend([
         "-r".into(),
         fps.to_string(),
         "-t".into(),
@@ -286,12 +300,25 @@ mod tests {
         let args = ffmpeg_args(&job());
         let graph = &args[args.iter().position(|a| a == "-filter_complex").unwrap() + 1];
         assert_eq!(graph.matches("format=yuv420p").count(), 1);
-        assert!(graph.contains(&format!("format=rgb,{TO_YUV}[vout]")));
+        assert!(graph.contains(&format!("format=rgb,{}[vout]", to_yuv(&job()))));
         let opt = |k: &str| &args[args.iter().position(|a| a == k).unwrap() + 1];
         assert_eq!(opt("-colorspace"), "bt709");
         assert_eq!(opt("-color_trc"), "iec61966-2-1");
         assert!(graph.contains("out_h_chr_pos=0:out_v_chr_pos=128"));
         assert_eq!(opt("-chroma_sample_location"), "left");
+        assert_eq!(opt("-pix_fmt"), "yuv420p");
+    }
+
+    #[test]
+    fn full_color_keeps_chroma_at_full_resolution() {
+        let mut j = job();
+        j.full_color = true;
+        let args = ffmpeg_args(&j);
+        let graph = &args[args.iter().position(|a| a == "-filter_complex").unwrap() + 1];
+        assert_eq!(graph.matches("format=yuv444p").count(), 1);
+        assert!(!graph.contains("yuv420p") && !graph.contains("chr_pos"));
+        assert_eq!(args[args.iter().position(|a| a == "-pix_fmt").unwrap() + 1], "yuv444p");
+        assert!(!args.contains(&"-chroma_sample_location".to_string()));
     }
 
     #[test]

@@ -186,6 +186,8 @@ const id: Record<Key, string> = {
   "export.fast": "Cepat",
   "export.balanced": "Seimbang",
   "export.slow": "Lambat (file lebih kecil)",
+  "export.fullColor": "Warna penuh (4:4:4)",
+  "export.fullColorHint": "Pinggir teks dan logo berwarna tetap tajam. File lebih besar, dan banyak HP, TV, dan browser tidak bisa memutarnya; pakai untuk editing atau upload ke situs yang meng-encode ulang.",
   "export.preparing": "Menyiapkan…",
   "export.doneIn": "Selesai dalam {s} dtk",
   "export.reveal": "Tampilkan di Finder",

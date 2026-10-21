@@ -321,6 +321,7 @@ const en = {
   "scenes.syncAiHint": "Each scene takes its voiceover's length, then the AI retimes the animation to the narration: elements appear when mentioned and the exit plays after the voice ends. The design stays the same.",
   "prod.voiceDirecting": "Directing the voice for \"{title}\"…",
   "prod.revising": "Revising scene \"{title}\" to {dur} s…",
+  "prod.retimeLater": "Scene \"{title}\" is now {dur} s. Its animation still has the old timing; ask Claude Code to retime it, or add an API key to sync it.",
   "prod.revised": "Scene \"{title}\" revised to {dur} s",
   "prod.voiceCondensing": "Condensing the narration of \"{title}\" to fit the scene…",
   "prod.voiceCondensed": "narration condensed",
@@ -350,6 +351,7 @@ const en = {
   // agent
 
   // settings errors
+  "err.noAiKey": "This needs the app's AI, which has no API key. Add one in AI Settings, or ask Claude Code to do it (terminal → Connect Claude Code).",
   "err.noProfile": "No AI profile yet. Add one in AI Settings.",
   "err.ttsProfile": "Add a voice profile in AI Settings → Voice.",
   "err.noAudio": "The file has no audio",

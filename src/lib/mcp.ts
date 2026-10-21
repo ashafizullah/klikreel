@@ -14,7 +14,7 @@ import { duplicateScene, generateVoice, removeVoice, sceneContext, voiceSlot } f
 import { buildComposition } from "./composition";
 import { buildRenderJob } from "./renderJob";
 import { projectDuration } from "./timeline";
-import { sceneStarts } from "./scenes";
+import { needsSync, sceneStarts } from "./scenes";
 import { newId } from "./ids";
 import { ipc, type ToolDef } from "./ipc";
 import { createProject, leaveProject, loadProject, projectBusy, setMusic } from "./library";
@@ -37,6 +37,7 @@ Workflow:
 0. If no project is open, or the user means another one, use list_projects, then open_project or create_project. The workspace whose path matches your working directory is usually the right one.
 1. get_storyboard to see the project, its style guide and scene ids (never invent ids). If the project is empty, set_style first, then add_scene for each scene.
 2. get_scene before writing a scene: it returns the current HTML, the product/style context, narration timing and the exact HTML frame rules. Follow those rules strictly (window.__seek(t), GSAP timeline, no timers, no network).
+   Scenes with needs_retime: true were resized (often by the user dragging the clip) after their HTML was written for designed_for seconds: keep the design and retime the animation to the new duration, cueing to the narration and ending the exit at the scene end.
 3. set_scene_html to save the page; it is rejected with the reasons if it breaks the frame rules.
 4. snapshot to look at the result and fix what looks wrong.
 5. generate_voice after narration changes (uses the TTS voice configured in KlikReel), then re-check timing.
@@ -255,6 +256,9 @@ async function run(name: string, a: ToolArgs, progress: (text: string) => void):
       return [
         `# Scene ${scene.id}: ${scene.title}`,
         `Duration: ${scene.duration}s · status: ${scene.status}${scene.voiceDuration ? ` · voiceover ${scene.voiceDuration.toFixed(1)}s` : ""}`,
+        ...(needsSync(scene)
+          ? [`Needs retiming: the HTML below was timed for ${scene.designDuration ?? scene.duration}s but the scene is now ${scene.duration}s. Keep the design; change only the animation timing.`]
+          : []),
         await sceneContext(scene.id),
         `# HTML frame rules\n${await invoke<string>("frame_rules", { width, height, duration: scene.duration })}`,
         `# Current HTML\n${scene.html || "(none yet)"}`,

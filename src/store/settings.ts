@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { newId } from "../lib/ids";
 import { t } from "../i18n";
+import { ipc } from "../lib/ipc";
 
 export type ApiFormat = "openai" | "anthropic";
 
@@ -151,6 +152,27 @@ export function activeModel() {
   const p = s.profiles.find((x) => x.id === s.activeProfileId) ?? s.profiles[0];
   if (!p) throw new Error(t("err.noProfile"));
   return { format: p.format, profileId: p.id, baseUrl: p.baseUrl || null, model: p.model };
+}
+
+/** Whether the app's own AI can run: a key is stored, or the endpoint is local (Ollama and the like). */
+export async function aiReady(): Promise<boolean> {
+  const s = useSettings.getState();
+  const p = s.profiles.find((x) => x.id === s.activeProfileId) ?? s.profiles[0];
+  if (!p) return false;
+  if (p.format === "openai" && /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/.test(p.baseUrl)) return true;
+  try {
+    return !!(await ipc.apiKeysStatus([p.id]))[p.id];
+  } catch {
+    return false;
+  }
+}
+
+/** Thrown before any change when an action needs the app's own AI and it has no key. */
+export class NoAiError extends Error {}
+
+/** Fails fast, before any change, for actions that need the app's own AI. */
+export async function requireAi(): Promise<void> {
+  if (!(await aiReady())) throw new NoAiError(t("err.noAiKey"));
 }
 
 export function voiceRequest(v: VoiceProfile) {

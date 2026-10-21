@@ -9,7 +9,7 @@ import { newId } from "./ids";
 import { runToolLoop, type ToolArgs } from "./toolLoop";
 import { execWorkspaceTool, isWorkspaceTool, WORKSPACE_TOOLS } from "./workspaceTools";
 import { generateSceneVisual, generateVoice } from "./producer";
-import { sceneStarts } from "./scenes";
+import { needsSync, sceneStarts } from "./scenes";
 
 const SYSTEM = `You revise a generated product promo video. The video is a sequence of scenes; each scene has a title, a voiceover narration, a visual brief, a duration and an animated HTML page.
 
@@ -62,7 +62,8 @@ function storyboard() {
     style: project.style,
     scenes: project.scenes.map((s, i) => ({
       id: s.id, number: i + 1, position: i, start: +starts[i].toFixed(2), duration: s.duration, title: s.title,
-      narration: s.narration, visual: s.visual, status: s.status, has_voice: !!s.voicePath, images: Object.keys(s.assetRefs),
+      narration: s.narration, visual: s.visual, status: s.status, has_voice: !!s.voicePath,
+      ...(needsSync(s) ? { needs_retime: true, designed_for: s.designDuration ?? s.duration } : {}), images: Object.keys(s.assetRefs),
     })),
   };
 }

@@ -1,5 +1,5 @@
 // Provider-neutral tool-use loop shared by the editing agent and the producer.
-import { activeModel } from "../store/settings";
+import { activeModel, requireAi } from "../store/settings";
 import type { Message, Part, ToolDef } from "./ipc";
 import { ipc } from "./ipc";
 
@@ -21,6 +21,7 @@ export interface LoopOptions {
 
 /** Runs until the model stops calling tools. `history` is extended in place. */
 export async function runToolLoop(o: LoopOptions): Promise<string> {
+  await requireAi();
   for (let step = 0; step < (o.maxSteps ?? 12); step++) {
     if (o.signal?.cancelled) return "cancelled";
     const res = await ipc.chat({ ...activeModel(), system: o.system, messages: o.history, tools: o.tools }, o.onText);

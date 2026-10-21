@@ -3,7 +3,7 @@
 import type { Scene, StyleGuide } from "../types/project";
 import { useProject } from "../store/project";
 import { useImages } from "../store/images";
-import { activeModel, activeVoice, ttsConnection } from "../store/settings";
+import { activeModel, activeVoice, aiReady, requireAi, ttsConnection } from "../store/settings";
 import type { Message, ToolDef } from "./ipc";
 import { ipc } from "./ipc";
 import { newId } from "./ids";
@@ -11,7 +11,7 @@ import { runToolLoop, type ToolArgs } from "./toolLoop";
 import { execWorkspaceTool, WORKSPACE_TOOLS } from "./workspaceTools";
 import { exactFit, fitDuration, VOICE_LEAD, VOICE_TAIL } from "./scenes";
 import { localizeMessage, t } from "../i18n";
-import { track } from "../store/activity";
+import { track, useActivity } from "../store/activity";
 
 export type LogEntry = { kind: "info" | "tool" | "error" | "done"; text: string };
 export type Log = (e: LogEntry) => void;
@@ -175,6 +175,7 @@ export async function generateSceneVisual(sceneId: string, instruction?: string)
   const store = useProject.getState();
   const scene = store.project.scenes.find((s) => s.id === sceneId);
   if (!scene) return;
+  await requireAi();
   const editing = !!instruction && !!scene.html;
   const title = scene.title;
   const label = t(editing ? "prod.sceneEditing" : "prod.sceneBuilding", { title });
@@ -301,7 +302,7 @@ async function directVoice(sceneId: string, narration: string, seconds: number):
   ].join("\n");
   const base = `Speak in ${project.brief.language}. Tone: ${project.brief.tone}. This is a product promo voiceover.`;
   const voice = activeVoice();
-  if (voice?.expressive === false) return { text: narration, instructions: base };
+  if (voice?.expressive === false || !(await aiReady())) return { text: narration, instructions: base };
   const ask = async (system: string, prompt: string) => {
     const res = await ipc.chat({ ...activeModel(), maxTokens: 2000, system, messages: [{ role: "user", content: [{ type: "text", text: prompt }] }] });
     return res.message.content.map((p) => (p.type === "text" ? p.text : "")).join("").trim().replace(/^```\w*\n?|```$/g, "").trim();
@@ -379,7 +380,7 @@ export async function generateVoice(
 
   try {
     ({ path, duration } = await record(text));
-    if (fitScene && opts.condense !== false && duration > slot * REWRITE_ABOVE) {
+    if (fitScene && opts.condense !== false && duration > slot * REWRITE_ABOVE && (await aiReady())) {
       line.progress(t("prod.voiceCondensing", { title: scene.title }));
       text = await shortenNarration(text, slot * 0.95, project.brief.language);
       ({ path, duration } = await record(text));
@@ -406,7 +407,7 @@ export async function generateVoice(
   useProject.getState().updateScene(sceneId, { narration: text, voicePath: path, voiceDuration: duration, voiceText: text, voiceScript: script, duration: newDuration });
   line.done(t("prod.voiceReady", { title: scene.title, dur: duration.toFixed(1) }) + (note ? ` · ${note}` : ""));
   // The scene got longer than its animation was made for: let the AI retime it.
-  if (opts.autoSync !== false && current.html && newDuration > current.duration + 0.05) await syncSceneWithAI(sceneId);
+  if (opts.autoSync !== false && current.html && newDuration > current.duration + 0.05 && (await aiReady())) await syncSceneWithAI(sceneId);
 }
 
 async function research(log: Log, signal: { cancelled: boolean }): Promise<Storyboard> {
@@ -585,6 +586,11 @@ export async function reviseSceneDuration(sceneId: string, duration: number): Pr
   if (Math.abs(target - s.duration) < 0.05) return;
   useProject.getState().updateScene(sceneId, { duration: target, durationLocked: true });
   if (!s.html) return;
+  // Without the app's AI the new length stays and the scene is flagged for retiming (e.g. by Claude Code).
+  if (!(await aiReady())) {
+    useActivity.getState().push("info", t("prod.retimeLater", { title: s.title, dur: target.toFixed(1) }));
+    return;
+  }
   const line = track(t("prod.revising", { title: s.title, dur: target.toFixed(1) }));
   try {
     await syncSceneWithAI(sceneId, { keepDuration: true });
@@ -613,6 +619,7 @@ export function removeVoice(sceneId: string): void {
 
 /** Syncs every voiced scene with AI. */
 export async function syncWithAI(): Promise<{ synced: number; failed: number }> {
+  await requireAi();
   const result = { synced: 0, failed: 0 };
   const scenes = useProject.getState().project.scenes.filter((s) => s.voiceDuration && s.html);
   await pool(scenes, 3, async (s) => {

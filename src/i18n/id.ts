@@ -309,6 +309,7 @@ const id: Record<Key, string> = {
   "scenes.syncAiHint": "Durasi scene disamakan dengan voiceover, lalu AI menata ulang timing animasi sesuai narasi: elemen muncul saat disebut dan animasi keluar diputar setelah suara selesai. Desain tidak berubah.",
   "prod.voiceDirecting": "Mengarahkan suara \"{title}\"…",
   "prod.revising": "Merevisi scene \"{title}\" menjadi {dur} dtk…",
+  "prod.retimeLater": "Scene \"{title}\" sekarang {dur} dtk. Timing animasinya masih yang lama; minta Claude Code menyesuaikannya, atau isi API key untuk sync.",
   "prod.revised": "Scene \"{title}\" direvisi menjadi {dur} dtk",
   "prod.voiceCondensing": "Memadatkan narasi \"{title}\" agar pas dengan scene…",
   "prod.voiceCondensed": "narasi dipadatkan",
@@ -335,6 +336,7 @@ const id: Record<Key, string> = {
   "prod.noPrompt": "Tulis prompt video terlebih dahulu",
   "prod.noStoryboard": "AI tidak menghasilkan storyboard ({reason})",
 
+  "err.noAiKey": "Aksi ini butuh AI bawaan app, tapi API key-nya belum diisi. Isi di Pengaturan AI, atau minta Claude Code mengerjakannya (terminal → Hubungkan Claude Code).",
   "err.noProfile": "Belum ada profil AI. Tambahkan di Pengaturan AI.",
   "err.ttsProfile": "Tambahkan profil suara di Pengaturan AI → Suara.",
   "err.noAudio": "File tidak berisi audio",

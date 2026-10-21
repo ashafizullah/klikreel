@@ -8,6 +8,8 @@ import { createLimiter } from "../lib/queue";
 const sceneQueue = createLimiter(3);
 import { useProject } from "./project";
 import { localizeMessage, t, type Key } from "../i18n";
+import { NoAiError } from "./settings";
+import { notifyError } from "./ui";
 
 interface ProductionState {
   running: boolean;
@@ -64,6 +66,8 @@ export const useProduction = create<ProductionState>()((set, get) => ({
     try {
       const r = await syncWithAI();
       useActivity.getState().push(r.failed ? "error" : "done", t("prod.syncAiDone", { n: r.synced, f: r.failed }));
+    } catch (e) {
+      notifyError(e);
     } finally {
       set({ running: false });
     }
@@ -77,8 +81,9 @@ export const useProduction = create<ProductionState>()((set, get) => ({
     get().setBusy(sceneId, "scenes.queued");
     try {
       await sceneQueue.run(fn, () => get().setBusy(sceneId, label));
-    } catch {
-      // Reported on the activity log and the scene card.
+    } catch (e) {
+      // Other failures are reported on the activity log and the scene card.
+      if (e instanceof NoAiError) notifyError(e);
     } finally {
       get().setBusy(sceneId, null);
     }

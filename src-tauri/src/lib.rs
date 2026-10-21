@@ -6,6 +6,7 @@ mod keys;
 mod library;
 mod media;
 mod render;
+mod terminal;
 mod workspace;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -17,6 +18,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .manage(commands::RenderState::default())
+        .manage(terminal::Terminals::default())
         .setup(|app| {
             use tauri::Manager;
             let dir = app.path().app_data_dir()?;
@@ -59,6 +61,10 @@ pub fn run() {
             commands::tts_generate,
             commands::tts_preview,
             commands::tts_voices,
+            commands::terminal_open,
+            commands::terminal_write,
+            commands::terminal_resize,
+            commands::terminal_close,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

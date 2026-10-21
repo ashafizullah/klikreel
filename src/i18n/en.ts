@@ -63,6 +63,13 @@ const en = {
   "top.saving": "saving…",
   "top.saved": "saved",
   "top.export": "Export",
+  "top.terminal": "Terminal (Ctrl+`)",
+  "panel.terminal": "Terminal",
+  "terminal.title": "Terminal",
+  "terminal.runClaude": "Run Claude Code",
+  "terminal.restart": "Restart",
+  "terminal.hide": "Hide terminal",
+  "terminal.exited": "Process exited. Press Restart to open a new shell.",
 
   // brief
   "brief.tabCreate": "Create",

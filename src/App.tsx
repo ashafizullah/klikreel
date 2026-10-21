@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { TopBar } from "./components/layout/TopBar";
 import { Home } from "./components/home/Home";
 import { BriefPanel } from "./components/studio/BriefPanel";
@@ -17,6 +17,21 @@ import { useShortcuts } from "./lib/shortcuts";
 import { useT } from "./i18n";
 
 const CodeEditorDialog = lazy(() => import("./components/dialogs/CodeEditorDialog"));
+const TerminalPanel = lazy(() => import("./components/terminal/TerminalPanel"));
+
+/** Starts the shell only once the panel is first opened; it lives until the project closes. */
+function TerminalSlot() {
+  const visible = useUi((s) => s.terminal);
+  const [started, setStarted] = useState(visible);
+  useEffect(() => {
+    if (visible) setStarted(true);
+  }, [visible]);
+  return started ? (
+    <Suspense fallback={null}>
+      <TerminalPanel />
+    </Suspense>
+  ) : null;
+}
 
 export default function App() {
   useShortcuts();
@@ -39,6 +54,7 @@ export default function App() {
           <div className="h-[230px] shrink-0">
             <ErrorBoundary name={t("panel.timeline")}><Timeline /></ErrorBoundary>
           </div>
+          <ErrorBoundary name={t("panel.terminal")}><TerminalSlot /></ErrorBoundary>
         </>
       )}
       {dialog === "settings" && <SettingsDialog />}

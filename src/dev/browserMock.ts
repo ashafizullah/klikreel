@@ -114,6 +114,12 @@ mockIPC(async (cmd, args) => {
       return 1;
     case "plugin:event|unlisten":
       return null;
+    case "terminal_open":
+      return "term_mock";
+    case "terminal_write":
+    case "terminal_resize":
+    case "terminal_close":
+      return null;
     default:
       throw new Error(`${cmd} tidak tersedia di mode browser`);
   }

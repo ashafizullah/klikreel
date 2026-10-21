@@ -22,6 +22,11 @@ export function useShortcuts() {
         saveNow().catch(notifyError);
         return;
       }
+      if (e.ctrlKey && e.key === "`") {
+        e.preventDefault();
+        useUi.getState().toggleTerminal();
+        return;
+      }
       if (typing(e) || useUi.getState().dialog) return;
       const pb = usePlayback.getState();
       const { project, selectedClipId } = useProject.getState();

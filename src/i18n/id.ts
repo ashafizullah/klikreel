@@ -62,6 +62,13 @@ const id: Record<Key, string> = {
   "top.saving": "menyimpan…",
   "top.saved": "tersimpan",
   "top.export": "Ekspor",
+  "top.terminal": "Terminal (Ctrl+`)",
+  "panel.terminal": "Terminal",
+  "terminal.title": "Terminal",
+  "terminal.runClaude": "Jalankan Claude Code",
+  "terminal.restart": "Mulai ulang",
+  "terminal.hide": "Sembunyikan terminal",
+  "terminal.exited": "Proses selesai. Tekan Mulai ulang untuk membuka shell baru.",
 
   "brief.tabCreate": "Buat",
   "brief.tabRevise": "Revisi",

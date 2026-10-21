@@ -42,6 +42,8 @@ export type RenderEvent =
   | { type: "progress"; ratio: number }
   | { type: "done"; output: string };
 
+export type TerminalEvent = { type: "data"; data: string } | { type: "exit"; code: number | null };
+
 export interface SystemStatus {
   ffmpeg: string | null;
   ffprobe: string | null;
@@ -111,6 +113,15 @@ export const ipc = {
   wsSearch: (workspaceId: string, query: string) => invoke<string[]>("ws_search", { workspaceId, query }),
   wsImage: (workspaceId: string, path: string, maxWidth?: number) => invoke<string>("ws_image", { workspaceId, path, maxWidth }),
   wsImages: (workspaceId: string, query?: string) => invoke<string[]>("ws_images", { workspaceId, query }),
+
+  terminalOpen: (cwd: string, cols: number, rows: number, onEvent: (e: TerminalEvent) => void) => {
+    const ch = new Channel<TerminalEvent>();
+    ch.onmessage = onEvent;
+    return invoke<string>("terminal_open", { cwd, cols, rows, onEvent: ch });
+  },
+  terminalWrite: (id: string, data: string) => invoke<void>("terminal_write", { id, data }),
+  terminalResize: (id: string, cols: number, rows: number) => invoke<void>("terminal_resize", { id, cols, rows }),
+  terminalClose: (id: string) => invoke<void>("terminal_close", { id }),
 
   ttsVoices: (profileId: string, baseUrl?: string | null) => invoke<{ id: string; name: string }[]>("tts_voices", { profileId, baseUrl }),
   ttsPreview: (request: { profileId: string; baseUrl?: string | null; engine?: string; text: string; model?: string; voice?: string; language?: string; speed?: number }) =>

@@ -289,3 +289,27 @@ pub async fn tts_generate(project_id: String, name: String, request: ai::tts::Tt
     ai::tts::synthesize(&request, &out).await?;
     Ok(out.to_string_lossy().into_owned())
 }
+
+// ---- terminal ---------------------------------------------------------------
+
+use crate::terminal::{TerminalEvent, Terminals};
+
+#[tauri::command]
+pub fn terminal_open(cwd: String, cols: u16, rows: u16, on_event: Channel<TerminalEvent>, state: State<'_, Terminals>) -> AppResult<String> {
+    state.open(&cwd, cols, rows, on_event)
+}
+
+#[tauri::command]
+pub fn terminal_write(id: String, data: String, state: State<'_, Terminals>) -> AppResult<()> {
+    state.write(&id, &data)
+}
+
+#[tauri::command]
+pub fn terminal_resize(id: String, cols: u16, rows: u16, state: State<'_, Terminals>) -> AppResult<()> {
+    state.resize(&id, cols, rows)
+}
+
+#[tauri::command]
+pub fn terminal_close(id: String, state: State<'_, Terminals>) {
+    state.close(&id);
+}

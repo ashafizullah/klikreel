@@ -10,6 +10,9 @@ interface UiState {
   zoom: number;
   snapping: boolean;
   dialog: null | "settings" | "export" | "code";
+  /** In-app terminal panel visibility. */
+  terminal: boolean;
+  toggleTerminal(): void;
   toast: { kind: "info" | "error"; text: string } | null;
   setZoom(z: number): void;
   toggleSnapping(): void;
@@ -25,6 +28,8 @@ export const useUi = create<UiState>()((set) => ({
   zoom: 60,
   snapping: true,
   dialog: null,
+  terminal: false,
+  toggleTerminal: () => set((s) => ({ terminal: !s.terminal })),
   toast: null,
   setZoom: (zoom) => set({ zoom: Math.min(600, Math.max(4, zoom)) }),
   toggleSnapping: () => set((s) => ({ snapping: !s.snapping })),

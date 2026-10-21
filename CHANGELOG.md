@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.7
+
+- Built-in terminal (Ctrl+` or the terminal button in the top bar), opened in your project folder
+- Works with Claude Code: turn on the local MCP server (terminal → Connect Claude Code), add it to your own Claude Code once, and ask Claude to edit scenes, write their animations, record voiceovers, set music, take snapshots and export. Changes show up live and can be undone, and a green badge shows when Claude Code is connected
+- Without an API key for the app's AI, resizing a scene or recording a voiceover no longer fails: the new length is kept and the scene is marked for retiming, which Claude Code can do. AI-only actions now say what's missing before changing anything
+
 ## 0.1.6
 
 - New "Full color (4:4:4)" export option: colored text and logo edges no longer bleed into their surroundings. Off by default, because many phones, TVs and browsers can't play 4:4:4 video

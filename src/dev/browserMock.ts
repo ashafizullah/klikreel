@@ -114,6 +114,12 @@ mockIPC(async (cmd, args) => {
       return 1;
     case "plugin:event|unlisten":
       return null;
+    case "mcp_start":
+    case "mcp_status":
+      return { url: "http://127.0.0.1:47821/mcp", token: "mock-token" };
+    case "mcp_stop":
+    case "mcp_reply":
+      return null;
     case "terminal_open":
       return "term_mock";
     case "terminal_write":

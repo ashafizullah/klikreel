@@ -24,7 +24,7 @@ const str = { type: "string" };
 const num = { type: "number" };
 const obj = (properties: Record<string, unknown>, required: string[] = []) => ({ type: "object", properties, required });
 
-const TOOLS: ToolDef[] = [
+export const TOOLS: ToolDef[] = [
   ...WORKSPACE_TOOLS,
   { name: "get_storyboard", description: "Returns the video settings, style guide and every scene.", parameters: obj({}) },
   {
@@ -61,13 +61,13 @@ function storyboard() {
     language: project.brief.language,
     style: project.style,
     scenes: project.scenes.map((s, i) => ({
-      id: s.id, position: i, start: +starts[i].toFixed(2), duration: s.duration, title: s.title,
+      id: s.id, number: i + 1, position: i, start: +starts[i].toFixed(2), duration: s.duration, title: s.title,
       narration: s.narration, visual: s.visual, status: s.status, has_voice: !!s.voicePath, images: Object.keys(s.assetRefs),
     })),
   };
 }
 
-function requireScene(id: unknown): Scene {
+export function requireScene(id: unknown): Scene {
   const scene = useProject.getState().project.scenes.find((s) => s.id === String(id));
   if (!scene) throw new Error(`scene ${String(id)} not found; call get_storyboard`);
   return scene;
@@ -76,7 +76,8 @@ function requireScene(id: unknown): Scene {
 const s = (v: unknown) => (typeof v === "string" ? v : undefined);
 const n = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
 
-async function exec(name: string, a: ToolArgs): Promise<unknown> {
+/** Runs one of TOOLS against the open project. */
+export async function exec(name: string, a: ToolArgs): Promise<unknown> {
   const store = useProject.getState();
   switch (name) {
     case "get_storyboard":

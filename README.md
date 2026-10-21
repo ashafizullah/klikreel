@@ -34,9 +34,21 @@
 - **Background music**, timeline editing, and an HTML code editor (Monaco) for every scene
 - **Revise by chat**: ask the AI to change a scene, its narration or the order, and it edits the storyboard for you
 - **Bring your own model**: Anthropic or any OpenAI-compatible API; keys are stored in the OS keychain
+- **Built-in terminal** (Ctrl+`) opened in your project folder
+- **Works with Claude Code**: turn on the local MCP server and your own Claude Code can edit scenes, write their HTML, record voiceovers, take snapshots and export
 - **Export** to MP4 with headless Chrome and ffmpeg
 - **Auto-update** from GitHub Releases (signed packages; checked daily, or via *Check for updates* on the home screen)
 - **English and Bahasa Indonesia** interface
+
+## Using Claude Code
+
+KlikReel can be driven by [Claude Code](https://claude.com/claude-code) installed on your own computer, signed in with your own account (including Pro/Max plans):
+
+1. Open a video project, open the terminal (Ctrl+`) and click **Connect Claude Code**.
+2. Enable the local MCP server and copy the `claude mcp add …` command. Run it once in any terminal.
+3. Start `claude` and ask for changes, e.g. *"rewrite the opening scene so it shows the dashboard"*. Edits appear live in KlikReel and can be undone.
+
+The server only listens on `127.0.0.1` and requires a secret token. KlikReel never launches Claude Code, sends it prompts, reads its output or touches your Claude credentials: you add the server and run Claude Code yourself.
 
 ## Download
 

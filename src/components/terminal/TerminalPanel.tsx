@@ -9,6 +9,7 @@ import { useProject } from "../../store/project";
 import { notifyError, useUi } from "../../store/ui";
 import { useT } from "../../i18n";
 import { Button, IconButton } from "../ui";
+import { McpConnect } from "./McpConnect";
 
 const decode = (b64: string) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
 
@@ -25,6 +26,10 @@ export default function TerminalPanel() {
   const [generation, setGeneration] = useState(0);
   const [exited, setExited] = useState(false);
   const [height, setHeight] = useState(260);
+  // The shell keeps its folder when another project opens, so a running Claude Code survives open_project.
+  const latestCwd = useRef(cwd);
+  latestCwd.current = cwd;
+  const [shellCwd, setShellCwd] = useState(cwd);
 
   useEffect(() => {
     const el = host.current;
@@ -45,10 +50,11 @@ export default function TerminalPanel() {
     term.current = xterm;
     fit.current = fitAddon;
     setExited(false);
+    setShellCwd(latestCwd.current);
 
     let disposed = false;
     ipc
-      .terminalOpen(cwd, xterm.cols, xterm.rows, (e) => {
+      .terminalOpen(latestCwd.current, xterm.cols, xterm.rows, (e) => {
         if (e.type === "data") xterm.write(decode(e.data));
         else setExited(true);
       })
@@ -71,7 +77,7 @@ export default function TerminalPanel() {
       session.current = null;
       xterm.dispose();
     };
-  }, [cwd, generation]);
+  }, [generation]);
 
   useEffect(() => {
     if (!visible) return;
@@ -105,8 +111,9 @@ export default function TerminalPanel() {
       <div className="flex h-8 shrink-0 items-center gap-2 border-b border-line bg-panel px-3">
         <SquareTerminal size={14} className="text-muted" />
         <span className="text-[12px] font-medium">{t("terminal.title")}</span>
-        <span className="truncate text-[11px] text-muted">{cwd}</span>
+        <span className="truncate text-[11px] text-muted">{shellCwd}</span>
         <div className="flex-1" />
+        <McpConnect />
         <Button variant="ghost" className="py-1" onClick={runClaude} disabled={exited}>
           <Sparkles size={13} /> {t("terminal.runClaude")}
         </Button>

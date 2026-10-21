@@ -4,6 +4,7 @@ mod commands;
 mod error;
 mod keys;
 mod library;
+mod mcp;
 mod media;
 mod render;
 mod terminal;
@@ -23,6 +24,7 @@ pub fn run() {
             use tauri::Manager;
             let dir = app.path().app_data_dir()?;
             keys::init(dir.clone());
+            app.manage(mcp::Mcp::new(dir.clone()));
             app.manage(library::Library::new(dir));
             Ok(())
         })
@@ -65,6 +67,13 @@ pub fn run() {
             commands::terminal_write,
             commands::terminal_resize,
             commands::terminal_close,
+            commands::mcp_start,
+            commands::mcp_stop,
+            commands::mcp_status,
+            commands::mcp_reply,
+            commands::frame_rules,
+            commands::frame_check,
+            commands::frame_snapshot,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

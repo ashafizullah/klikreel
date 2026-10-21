@@ -64,14 +64,15 @@ export async function createProject(workspaceId: string, name: string, width: nu
   await saveNow();
 }
 
+/** Loads a project and opens it; throws on failure. */
+export async function loadProject(id: string) {
+  const stored = JSON.parse(await ipc.projectFetch(id)) as Stored;
+  const { images = {}, ...rest } = stored;
+  enter(normalizeProject(rest as Project), images);
+}
+
 export async function openProject(id: string) {
-  try {
-    const stored = JSON.parse(await ipc.projectFetch(id)) as Stored;
-    const { images = {}, ...rest } = stored;
-    enter(normalizeProject(rest as Project), images);
-  } catch (e) {
-    notifyError(e);
-  }
+  await loadProject(id).catch(notifyError);
 }
 
 /** Whether an AI job is still writing to the open project. */
@@ -79,6 +80,15 @@ export function projectBusy(): boolean {
   const prod = useProduction.getState();
   const scenes = useProject.getState().project.scenes;
   return prod.running || Object.keys(prod.busy).length > 0 || useChat.getState().busy || scenes.some((s) => s.status === "generating");
+}
+
+/** Saves and leaves the open project so another can be opened in its place; throws while a job still runs. */
+export async function leaveProject() {
+  if (useApp.getState().view !== "project") return;
+  if (projectBusy()) throw new Error(t("top.backBusy"));
+  clearTimeout(timer);
+  if (useProject.getState().dirty) await saveNow();
+  usePlayback.getState().pause();
 }
 
 export async function closeProject() {

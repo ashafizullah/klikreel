@@ -69,6 +69,15 @@ const en = {
   "terminal.runClaude": "Run Claude Code",
   "terminal.restart": "Restart",
   "terminal.hide": "Hide terminal",
+  "mcp.button": "Connect Claude Code",
+  "mcp.title": "Claude Code (MCP)",
+  "mcp.body": "Let Claude Code on this computer edit the open video project: scenes, HTML, voiceover, snapshots and export. Changes show up live and can be undone.",
+  "mcp.enable": "Enable the local MCP server",
+  "mcp.step1": "1. Run this once in a terminal",
+  "mcp.secret": "The copied command contains a secret token for this computer. Don't share it.",
+  "mcp.step2": "2. Use it",
+  "mcp.step2Body": "Start claude in this terminal and ask it, e.g. \"make the opening scene punchier\". Keep KlikReel open with the project.",
+  "mcp.copied": "Command copied",
   "terminal.exited": "Process exited. Press Restart to open a new shell.",
 
   // brief

@@ -313,3 +313,80 @@ pub fn terminal_resize(id: String, cols: u16, rows: u16, state: State<'_, Termin
 pub fn terminal_close(id: String, state: State<'_, Terminals>) {
     state.close(&id);
 }
+
+// ---- MCP (Claude Code) -------------------------------------------------------
+
+use crate::mcp::{Mcp, McpCall, McpInfo};
+
+#[tauri::command]
+pub async fn mcp_start(
+    tools: serde_json::Value,
+    instructions: String,
+    on_call: Channel<McpCall>,
+    state: State<'_, Mcp>,
+) -> AppResult<McpInfo> {
+    state.start(tools, instructions, on_call).await
+}
+
+#[tauri::command]
+pub fn mcp_stop(state: State<'_, Mcp>) {
+    state.stop();
+}
+
+#[tauri::command]
+pub fn mcp_status(state: State<'_, Mcp>) -> Option<McpInfo> {
+    state.status()
+}
+
+#[tauri::command]
+pub fn mcp_reply(id: u64, result: serde_json::Value, state: State<'_, Mcp>) {
+    state.reply(id, result);
+}
+
+/// Frame-writing rules for an HTML scene written outside the app's own AI.
+#[tauri::command]
+pub fn frame_rules(width: u32, height: u32, duration: f64) -> String {
+    ai::prompts::frame_system_prompt(width, height, duration, true)
+        .lines()
+        .filter(|l| !l.starts_with("Return exactly one complete HTML document"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+#[tauri::command]
+pub fn frame_check(html: String) -> Vec<String> {
+    ai::prompts::contract_issues(&html, false)
+}
+
+/// Renders a composition at the given times as JPEG data URIs over `background`.
+#[tauri::command]
+pub async fn frame_snapshot(html: String, width: u32, height: u32, times: Vec<f64>, background: String, max_width: u32) -> AppResult<Vec<String>> {
+    use base64::Engine;
+    use image::{ImageFormat, Rgba, RgbaImage, imageops};
+    let hex = background.trim_start_matches('#');
+    let channel = |i: usize| hex.get(i..i + 2).and_then(|h| u8::from_str_radix(h, 16).ok()).unwrap_or(0);
+    let bg = Rgba([channel(0), channel(2), channel(4), 255]);
+    let renderer = render::chromium::FrameRenderer::launch(&html, width, height).await?;
+    let mut out = Vec::new();
+    for t in times {
+        let png = match renderer.frame(t).await {
+            Ok(p) => p,
+            Err(e) => {
+                renderer.close().await;
+                return Err(e);
+            }
+        };
+        let layer = image::load_from_memory_with_format(&png, ImageFormat::Png).map_err(|e| AppError::msg(e.to_string()))?.to_rgba8();
+        let mut canvas = RgbaImage::from_pixel(layer.width(), layer.height(), bg);
+        imageops::overlay(&mut canvas, &layer, 0, 0);
+        let mut img = image::DynamicImage::ImageRgba8(canvas);
+        if img.width() > max_width {
+            img = img.resize(max_width, u32::MAX, imageops::FilterType::Triangle);
+        }
+        let mut jpeg = Vec::new();
+        img.to_rgb8().write_to(&mut std::io::Cursor::new(&mut jpeg), ImageFormat::Jpeg).map_err(|e| AppError::msg(e.to_string()))?;
+        out.push(format!("data:image/jpeg;base64,{}", base64::engine::general_purpose::STANDARD.encode(jpeg)));
+    }
+    renderer.close().await;
+    Ok(out)
+}

@@ -131,7 +131,7 @@ function imageSize(src: string): Promise<{ w: number; h: number } | null> {
   });
 }
 
-async function sceneContext(sceneId: string): Promise<string> {
+export async function sceneContext(sceneId: string): Promise<string> {
   const { project } = useProject.getState();
   const i = project.scenes.findIndex((s) => s.id === sceneId);
   const scene = project.scenes[i];
@@ -348,7 +348,7 @@ async function directVoice(sceneId: string, narration: string, seconds: number):
  */
 export async function generateVoice(
   sceneId: string,
-  opts: { fit?: "scene" | "narration"; autoSync?: boolean } = {},
+  opts: { fit?: "scene" | "narration"; autoSync?: boolean; condense?: boolean } = {},
 ): Promise<void> {
   const { project } = useProject.getState();
   const scene = project.scenes.find((s) => s.id === sceneId);
@@ -379,7 +379,7 @@ export async function generateVoice(
 
   try {
     ({ path, duration } = await record(text));
-    if (fitScene && duration > slot * REWRITE_ABOVE) {
+    if (fitScene && opts.condense !== false && duration > slot * REWRITE_ABOVE) {
       line.progress(t("prod.voiceCondensing", { title: scene.title }));
       text = await shortenNarration(text, slot * 0.95, project.brief.language);
       ({ path, duration } = await record(text));

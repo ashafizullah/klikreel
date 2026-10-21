@@ -89,7 +89,8 @@ export default function TerminalPanel() {
 
   const runClaude = () => {
     if (!session.current) return;
-    ipc.terminalWrite(session.current, "claude\r").catch(notifyError);
+    // Only types the command: the user presses Enter and runs Claude Code themselves.
+    ipc.terminalWrite(session.current, "claude").catch(notifyError);
     term.current?.focus();
   };
 
@@ -114,7 +115,7 @@ export default function TerminalPanel() {
         <span className="truncate text-[11px] text-muted">{shellCwd}</span>
         <div className="flex-1" />
         <McpConnect />
-        <Button variant="ghost" className="py-1" onClick={runClaude} disabled={exited}>
+        <Button variant="ghost" className="py-1" onClick={runClaude} disabled={exited} title={t("terminal.runClaudeHint")}>
           <Sparkles size={13} /> {t("terminal.runClaude")}
         </Button>
         <IconButton title={t("terminal.restart")} onClick={() => setGeneration((g) => g + 1)}><RotateCcw size={14} /></IconButton>

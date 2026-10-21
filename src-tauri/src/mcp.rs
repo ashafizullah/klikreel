@@ -319,7 +319,6 @@ async fn call_tool(inner: &Arc<Inner>, name: String, arguments: Value) -> Value 
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -364,13 +363,25 @@ mod tests {
         let (_, list) = post(&info, &token, json!({ "jsonrpc": "2.0", "id": 2, "method": "tools/list" })).await;
         assert_eq!(list["result"]["tools"][0]["name"], "get_storyboard");
 
-        let (_, call) = post(&info, &token, json!({ "jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": { "name": "get_storyboard", "arguments": {} } })).await;
+        let (_, call) = post(
+            &info,
+            &token,
+            json!({ "jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": { "name": "get_storyboard", "arguments": {} } }),
+        )
+        .await;
         assert_eq!(call["result"]["content"][0]["text"], "ran get_storyboard");
 
         let (_, unknown) = post(&info, &token, json!({ "jsonrpc": "2.0", "id": 4, "method": "resources/list" })).await;
         assert_eq!(unknown["error"]["code"], -32601);
 
-        let foreign = reqwest::Client::new().post(&info.url).bearer_auth(&token).header("Origin", "https://evil.example").json(&json!({})).send().await.unwrap();
+        let foreign = reqwest::Client::new()
+            .post(&info.url)
+            .bearer_auth(&token)
+            .header("Origin", "https://evil.example")
+            .json(&json!({}))
+            .send()
+            .await
+            .unwrap();
         assert_eq!(foreign.status().as_u16(), 403);
 
         let mut sse = reqwest::Client::new().get(&info.url).bearer_auth(&token).send().await.unwrap();

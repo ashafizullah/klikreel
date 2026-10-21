@@ -295,7 +295,13 @@ pub async fn tts_generate(project_id: String, name: String, request: ai::tts::Tt
 use crate::terminal::{TerminalEvent, Terminals};
 
 #[tauri::command]
-pub fn terminal_open(cwd: String, cols: u16, rows: u16, on_event: Channel<TerminalEvent>, state: State<'_, Terminals>) -> AppResult<String> {
+pub fn terminal_open(
+    cwd: String,
+    cols: u16,
+    rows: u16,
+    on_event: Channel<TerminalEvent>,
+    state: State<'_, Terminals>,
+) -> AppResult<String> {
     state.open(&cwd, cols, rows, on_event)
 }
 
@@ -360,7 +366,14 @@ pub fn frame_check(html: String) -> Vec<String> {
 
 /// Renders a composition at the given times as JPEG data URIs over `background`.
 #[tauri::command]
-pub async fn frame_snapshot(html: String, width: u32, height: u32, times: Vec<f64>, background: String, max_width: u32) -> AppResult<Vec<String>> {
+pub async fn frame_snapshot(
+    html: String,
+    width: u32,
+    height: u32,
+    times: Vec<f64>,
+    background: String,
+    max_width: u32,
+) -> AppResult<Vec<String>> {
     use base64::Engine;
     use image::{ImageFormat, Rgba, RgbaImage, imageops};
     let hex = background.trim_start_matches('#');

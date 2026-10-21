@@ -14,8 +14,12 @@ use tauri::ipc::Channel;
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum TerminalEvent {
     /// Raw output bytes, base64-encoded.
-    Data { data: String },
-    Exit { code: Option<u32> },
+    Data {
+        data: String,
+    },
+    Exit {
+        code: Option<u32>,
+    },
 }
 
 struct Session {

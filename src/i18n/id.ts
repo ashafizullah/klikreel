@@ -77,6 +77,10 @@ const id: Record<Key, string> = {
   "mcp.step2": "2. Pakai",
   "mcp.step2Body": "Jalankan claude di terminal ini lalu minta, misalnya \"buat scene pembuka lebih menarik\". Biarkan KlikReel tetap terbuka dengan project-nya.",
   "mcp.copied": "Perintah disalin",
+  "mcp.connected": "Claude Code terhubung",
+  "mcp.connectedTitle": "Terhubung: {client}",
+  "mcp.waiting": "MCP aktif",
+  "mcp.waitingTitle": "Server MCP aktif, menunggu Claude Code. Jalankan claude setelah server ditambahkan.",
   "terminal.exited": "Proses selesai. Tekan Mulai ulang untuk membuka shell baru.",
 
   "brief.tabCreate": "Buat",

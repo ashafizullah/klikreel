@@ -316,7 +316,7 @@ pub fn terminal_close(id: String, state: State<'_, Terminals>) {
 
 // ---- MCP (Claude Code) -------------------------------------------------------
 
-use crate::mcp::{Mcp, McpCall, McpInfo};
+use crate::mcp::{Mcp, McpCall, McpInfo, McpLink};
 
 #[tauri::command]
 pub async fn mcp_start(
@@ -334,8 +334,8 @@ pub fn mcp_stop(state: State<'_, Mcp>) {
 }
 
 #[tauri::command]
-pub fn mcp_status(state: State<'_, Mcp>) -> Option<McpInfo> {
-    state.status()
+pub fn mcp_link(state: State<'_, Mcp>) -> McpLink {
+    state.link()
 }
 
 #[tauri::command]

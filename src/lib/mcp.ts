@@ -1,6 +1,7 @@
 // Tools the local MCP server offers to the user's own Claude Code. The Rust
 // side relays each call here; edits go through the same stores as the UI, so
 // the preview updates live and everything can be undone.
+import { useEffect } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { Channel, invoke } from "@tauri-apps/api/core";
@@ -9,14 +10,15 @@ import { useProject } from "../store/project";
 import { useApp } from "../store/app";
 import { track } from "../store/activity";
 import { exec as execSceneTool, requireScene, TOOLS as SCENE_TOOLS } from "./agent";
-import { generateVoice, sceneContext, voiceSlot } from "./producer";
+import { duplicateScene, generateVoice, removeVoice, sceneContext, voiceSlot } from "./producer";
 import { buildComposition } from "./composition";
 import { buildRenderJob } from "./renderJob";
 import { projectDuration } from "./timeline";
 import { sceneStarts } from "./scenes";
 import { newId } from "./ids";
 import { ipc, type ToolDef } from "./ipc";
-import { createProject, leaveProject, loadProject, projectBusy } from "./library";
+import { createProject, leaveProject, loadProject, projectBusy, setMusic } from "./library";
+import { relayout } from "./scenes";
 import type { ToolArgs } from "./toolLoop";
 
 export interface McpInfo {
@@ -38,7 +40,8 @@ Workflow:
 3. set_scene_html to save the page; it is rejected with the reasons if it breaks the frame rules.
 4. snapshot to look at the result and fix what looks wrong.
 5. generate_voice after narration changes (uses the TTS voice configured in KlikReel), then re-check timing.
-6. export_video when the user asks for the final MP4.
+6. Optional: set_music for background music, update_brief for voiceover settings, update_project for the name and background.
+7. export_video when the user asks for the final MP4.
 
 The user's product codebase is usually your current working directory: read it for real names, wording, colors and logos. Images must be attached with attach_image (workspace-relative path) and used as window.__assets.<name>.`;
 
@@ -91,6 +94,11 @@ const TOOLS: ToolDef[] = [
     ),
   },
   reused("delete_scene"),
+  {
+    name: "duplicate_scene",
+    description: "Copies a scene (with its HTML and voiceover) right after the original.",
+    parameters: obj({ scene_id: str }, ["scene_id"]),
+  },
   reused("move_scene"),
   reused("find_images"),
   reused("attach_image", "Makes an image from the product folder available to a scene as window.__assets.<name>. Then reference it in the scene HTML."),
@@ -105,12 +113,34 @@ const TOOLS: ToolDef[] = [
   },
   {
     name: "update_brief",
-    description: "Changes the video brief: what it is about, the on-screen/voice language, tone or target length.",
-    parameters: obj({ prompt: str, language: str, tone: str, targetDuration: num }),
+    description: "Changes the video brief: what it is about, the on-screen/voice language, tone, target length and voiceover settings.",
+    parameters: obj({
+      prompt: str, language: str, tone: str, targetDuration: num,
+      voiceEnabled: { type: "boolean", description: "Whether scenes get a voiceover" },
+      voiceFit: { type: "string", enum: ["scene", "narration"], description: "scene: fit the voiceover into the scene length; narration: lengthen the scene to fit the voiceover" },
+    }),
+  },
+  {
+    name: "update_project",
+    description: "Renames the project or changes its background color (shown behind transparent layers).",
+    parameters: obj({ name: str, background: { ...str, description: "Hex color, e.g. #000000" } }),
+  },
+  {
+    name: "set_music",
+    description: "Sets, changes the volume of, or removes the background music that spans the whole video.",
+    parameters: obj({
+      path: { ...str, description: "Audio file: absolute, or relative to the product folder. Empty string removes the music." },
+      volume: { ...num, description: "0 to 1 (default 0.25)" },
+    }),
   },
   {
     name: "generate_voice",
     description: "Records the scene's voiceover from its current narration with the TTS voice configured in KlikReel. The scene may get longer to fit it; returns the new timing.",
+    parameters: obj({ scene_id: str }, ["scene_id"]),
+  },
+  {
+    name: "remove_voice",
+    description: "Removes a scene's voiceover from the timeline (the recording stays in the project's media).",
     parameters: obj({ scene_id: str }, ["scene_id"]),
   },
   {
@@ -260,7 +290,46 @@ async function run(name: string, a: ToolArgs, progress: (text: string) => void):
         if (s(a.language)) p.brief.language = s(a.language)!;
         if (s(a.tone)) p.brief.tone = s(a.tone)!;
         if (n(a.targetDuration)) p.brief.targetDuration = n(a.targetDuration)!;
+        if (typeof a.voiceEnabled === "boolean") p.brief.voiceEnabled = a.voiceEnabled;
+        if (a.voiceFit === "scene" || a.voiceFit === "narration") p.brief.voiceFit = a.voiceFit;
       });
+      return { ok: true, brief: useProject.getState().project.brief };
+    case "update_project": {
+      const bg = s(a.background);
+      if (bg !== undefined && !/^#[0-9a-fA-F]{6}$/.test(bg)) throw new Error("background must be a hex color like #000000");
+      store.update((p) => {
+        if (s(a.name)?.trim()) p.name = s(a.name)!.trim();
+        if (bg) p.background = bg;
+      });
+      return { ok: true };
+    }
+    case "set_music": {
+      if (s(a.path) !== undefined) {
+        const raw = s(a.path)!.trim();
+        const ws = useApp.getState().workspaces.find((w) => w.id === store.project.workspaceId);
+        const absolute = /^(\/|[A-Za-z]:[\\/])/.test(raw);
+        if (raw && !absolute && !ws) throw new Error("pass an absolute path; this project has no product folder");
+        await setMusic(raw ? (absolute ? raw : `${ws!.path.replace(/[\\/]+$/, "")}/${raw}`) : null);
+      }
+      const volume = n(a.volume);
+      if (volume !== undefined) {
+        useProject.getState().update((p) => {
+          p.brief.musicVolume = Math.max(0, Math.min(1, volume));
+          relayout(p);
+        });
+      }
+      const { brief } = useProject.getState().project;
+      return { music: brief.musicPath ?? null, volume: brief.musicVolume };
+    }
+    case "duplicate_scene": {
+      const scene = requireScene(a.scene_id);
+      const before = new Set(store.project.scenes.map((x) => x.id));
+      duplicateScene(scene.id);
+      const copy = useProject.getState().project.scenes.find((x) => !before.has(x.id));
+      return { scene_id: copy?.id };
+    }
+    case "remove_voice":
+      removeVoice(requireScene(a.scene_id).id);
       return { ok: true };
     case "generate_voice": {
       const scene = requireScene(a.scene_id);
@@ -308,9 +377,17 @@ async function handle(call: McpCall) {
   await invoke("mcp_reply", { id: call.id, result });
 }
 
+export interface McpLink {
+  running: boolean;
+  connected: boolean;
+  client: string | null;
+  idleSecs: number | null;
+}
+
 interface McpState {
   enabled: boolean;
   info: McpInfo | null;
+  link: McpLink | null;
   setEnabled(on: boolean): Promise<void>;
 }
 
@@ -319,10 +396,11 @@ export const useMcp = create<McpState>()(
     (set) => ({
       enabled: false,
       info: null,
+      link: null,
       setEnabled: async (enabled) => {
         if (!enabled) {
           await invoke("mcp_stop");
-          set({ enabled, info: null });
+          set({ enabled, info: null, link: null });
           return;
         }
         const onCall = new Channel<McpCall>();
@@ -336,10 +414,25 @@ export const useMcp = create<McpState>()(
   ),
 );
 
-/** Restarts the server on launch when the user left it on. */
-export function restoreMcp() {
-  if (useMcp.getState().enabled) useMcp.getState().setEnabled(true).catch(() => useMcp.setState({ enabled: false }));
+/** Polls whether Claude Code is connected while the server runs. */
+export function useMcpLink(): McpLink | null {
+  const enabled = useMcp((s) => s.enabled);
+  useEffect(() => {
+    if (!enabled) return;
+    const poll = () => invoke<McpLink>("mcp_link").then((link) => useMcp.setState({ link }), () => {});
+    poll();
+    const id = setInterval(poll, 3000);
+    return () => clearInterval(id);
+  }, [enabled]);
+  return useMcp((s) => (s.enabled ? s.link : null));
 }
+
+/**
+ * Restarts the server on launch when the user left it on. Runs on every
+ * evaluation of this module: after a dev hot reload re-creates the stores,
+ * the bridge must point at the new ones or edits land in stale state.
+ */
+if (useMcp.getState().enabled) useMcp.getState().setEnabled(true).catch(() => useMcp.setState({ enabled: false }));
 
 export const addCommand = (info: McpInfo) =>
   `claude mcp add --transport http --scope user klikreel ${info.url} --header "Authorization: Bearer ${info.token}"`;

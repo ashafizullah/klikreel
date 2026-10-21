@@ -78,6 +78,10 @@ const en = {
   "mcp.step2": "2. Use it",
   "mcp.step2Body": "Start claude in this terminal and ask it, e.g. \"make the opening scene punchier\". Keep KlikReel open with the project.",
   "mcp.copied": "Command copied",
+  "mcp.connected": "Claude Code connected",
+  "mcp.connectedTitle": "Connected: {client}",
+  "mcp.waiting": "MCP on",
+  "mcp.waitingTitle": "MCP server on, waiting for Claude Code. Run claude after adding the server.",
   "terminal.exited": "Process exited. Press Restart to open a new shell.",
 
   // brief

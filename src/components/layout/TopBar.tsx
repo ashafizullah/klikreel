@@ -7,6 +7,7 @@ import { closeProject } from "../../lib/library";
 import { useT } from "../../i18n";
 import { Button, IconButton } from "../ui";
 import { LanguageToggle } from "../ui/LanguageToggle";
+import { McpBadge } from "../terminal/McpBadge";
 
 export function TopBar() {
   const t = useT();
@@ -29,6 +30,7 @@ export function TopBar() {
       />
       <span className="text-[11px] text-muted">{dirty ? t("top.saving") : t("top.saved")}</span>
       <div className="flex-1" />
+      <McpBadge />
       <IconButton title={t("top.terminal")} active={terminal} onClick={() => useUi.getState().toggleTerminal()}><SquareTerminal size={16} /></IconButton>
       <LanguageToggle />
       <Button variant="ghost" onClick={() => open("settings")}><KeyRound size={14} /> {t("home.aiSettings")}</Button>

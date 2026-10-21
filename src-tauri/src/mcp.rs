@@ -14,9 +14,9 @@ use serde::Serialize;
 use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tauri::ipc::Channel;
 use tokio::sync::oneshot;
 
@@ -25,6 +25,9 @@ const PORT: u16 = 47821;
 /// Voiceovers and exports can take a while.
 const CALL_TIMEOUT: Duration = Duration::from_secs(30 * 60);
 const PROTOCOLS: [&str; 3] = ["2025-06-18", "2025-03-26", "2024-11-05"];
+/// A client that made a request this recently still counts as connected without an open stream.
+const RECENT: Duration = Duration::from_secs(90);
+const KEEPALIVE: Duration = Duration::from_secs(15);
 
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -32,6 +35,18 @@ pub struct McpCall {
     id: u64,
     name: String,
     arguments: Value,
+}
+
+/// Whether a client (the user's Claude Code) is talking to the server.
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct McpLink {
+    running: bool,
+    connected: bool,
+    /// `clientInfo` from the last initialize, e.g. "claude-code 2.1.0".
+    client: Option<String>,
+    /// Seconds since the last request.
+    idle_secs: Option<u64>,
 }
 
 #[derive(Serialize, Clone)]
@@ -48,6 +63,20 @@ struct Inner {
     bridge: Mutex<Option<Channel<McpCall>>>,
     pending: Mutex<HashMap<u64, oneshot::Sender<Value>>>,
     next_id: AtomicU64,
+    /// Open GET streams; Claude Code keeps one open for as long as its session runs.
+    streams: AtomicUsize,
+    last_seen: Mutex<Option<Instant>>,
+    client: Mutex<Option<String>>,
+}
+
+/// Counts an open stream until the client hangs up.
+struct StreamGuard(Arc<Inner>);
+
+impl Drop for StreamGuard {
+    fn drop(&mut self) {
+        self.0.streams.fetch_sub(1, Ordering::Relaxed);
+        *self.0.last_seen.lock().unwrap() = Some(Instant::now());
+    }
 }
 
 pub struct Mcp {
@@ -85,6 +114,9 @@ impl Mcp {
                 bridge: Mutex::new(None),
                 pending: Mutex::new(HashMap::new()),
                 next_id: AtomicU64::new(1),
+                streams: AtomicUsize::new(0),
+                last_seen: Mutex::new(None),
+                client: Mutex::new(None),
             }),
             running: Mutex::new(None),
         }
@@ -96,6 +128,18 @@ impl Mcp {
 
     pub fn status(&self) -> Option<McpInfo> {
         self.running.lock().unwrap().as_ref().map(|(port, _)| self.info(*port))
+    }
+
+    pub fn link(&self) -> McpLink {
+        let running = self.running.lock().unwrap().is_some();
+        let idle = self.inner.last_seen.lock().unwrap().map(|t| t.elapsed());
+        let streaming = self.inner.streams.load(Ordering::Relaxed) > 0;
+        McpLink {
+            running,
+            connected: running && (streaming || idle.is_some_and(|d| d < RECENT)),
+            client: self.inner.client.lock().unwrap().clone(),
+            idle_secs: idle.map(|d| d.as_secs()),
+        }
     }
 
     /// Starts the server (or just refreshes the tools and bridge when it already runs).
@@ -112,7 +156,7 @@ impl Mcp {
         };
         let port = listener.local_addr()?.port();
         let (stop, stopped) = oneshot::channel::<()>();
-        let app = Router::new().route("/mcp", post(handle).get(not_allowed).delete(not_allowed)).with_state(self.inner.clone());
+        let app = Router::new().route("/mcp", post(handle).get(stream).delete(not_allowed)).with_state(self.inner.clone());
         tauri::async_runtime::spawn(async move {
             let _ = axum::serve(listener, app)
                 .with_graceful_shutdown(async {
@@ -129,6 +173,7 @@ impl Mcp {
             let _ = stop.send(());
         }
         *self.inner.bridge.lock().unwrap() = None;
+        *self.inner.last_seen.lock().unwrap() = None;
         // Dropping the senders fails the calls still waiting.
         self.inner.pending.lock().unwrap().clear();
     }
@@ -156,14 +201,43 @@ fn local_origin(headers: &HeaderMap) -> bool {
     }
 }
 
-async fn handle(State(inner): State<Arc<Inner>>, headers: HeaderMap, body: Bytes) -> Response {
-    if !local_origin(&headers) {
-        return StatusCode::FORBIDDEN.into_response();
+/// Rejects foreign origins and wrong tokens; records the client as seen otherwise.
+fn authorize(inner: &Inner, headers: &HeaderMap) -> Result<(), (StatusCode, &'static str)> {
+    if !local_origin(headers) {
+        return Err((StatusCode::FORBIDDEN, "Forbidden origin"));
     }
     let auth = headers.get(header::AUTHORIZATION).and_then(|v| v.to_str().ok()).unwrap_or("");
     let given = auth.strip_prefix("Bearer ").unwrap_or("");
     if !same_secret(given.as_bytes(), inner.token.as_bytes()) {
-        return (StatusCode::UNAUTHORIZED, "Invalid KlikReel MCP token").into_response();
+        return Err((StatusCode::UNAUTHORIZED, "Invalid KlikReel MCP token"));
+    }
+    *inner.last_seen.lock().unwrap() = Some(Instant::now());
+    Ok(())
+}
+
+/// Server-to-client SSE stream. KlikReel sends nothing on it but keepalives;
+/// it is how the app knows Claude Code is still connected.
+async fn stream(State(inner): State<Arc<Inner>>, headers: HeaderMap) -> Response {
+    if let Err(r) = authorize(&inner, &headers) {
+        return r.into_response();
+    }
+    inner.streams.fetch_add(1, Ordering::Relaxed);
+    let guard = StreamGuard(inner);
+    let ticks = futures::stream::unfold(guard, |guard| async move {
+        tokio::time::sleep(KEEPALIVE).await;
+        Some((Ok::<_, std::convert::Infallible>(Bytes::from_static(b": keepalive\n\n")), guard))
+    });
+    let first = futures::stream::once(async { Ok(Bytes::from_static(b": connected\n\n")) });
+    (
+        [(header::CONTENT_TYPE, "text/event-stream"), (header::CACHE_CONTROL, "no-cache")],
+        axum::body::Body::from_stream(futures::StreamExt::chain(first, ticks)),
+    )
+        .into_response()
+}
+
+async fn handle(State(inner): State<Arc<Inner>>, headers: HeaderMap, body: Bytes) -> Response {
+    if let Err(r) = authorize(&inner, &headers) {
+        return r.into_response();
     }
     let Ok(msg) = serde_json::from_slice::<Value>(&body) else {
         return axum::Json(rpc_error(Value::Null, -32700, "Parse error")).into_response();
@@ -201,6 +275,10 @@ async fn dispatch(inner: &Arc<Inner>, msg: Value) -> Option<Value> {
     let params = msg.get("params").cloned().unwrap_or(Value::Null);
     let result = match method.as_str() {
         "initialize" => {
+            let info = params.get("clientInfo");
+            let name = info.and_then(|c| c.get("name")).and_then(Value::as_str);
+            let version = info.and_then(|c| c.get("version")).and_then(Value::as_str);
+            *inner.client.lock().unwrap() = name.map(|n| version.map_or(n.to_string(), |v| format!("{n} {v}")));
             let asked = params.get("protocolVersion").and_then(Value::as_str).unwrap_or("");
             let version = if PROTOCOLS.contains(&asked) { asked } else { PROTOCOLS[0] };
             json!({
@@ -273,7 +351,10 @@ mod tests {
         let (status, _) = post(&info, "wrong", json!({ "jsonrpc": "2.0", "id": 1, "method": "ping" })).await;
         assert_eq!(status, 401);
 
-        let (_, init) = post(&info, &token, json!({ "jsonrpc": "2.0", "id": 1, "method": "initialize", "params": { "protocolVersion": "2025-03-26" } })).await;
+        assert!(!mcp.link().connected);
+        let (_, init) = post(&info, &token, json!({ "jsonrpc": "2.0", "id": 1, "method": "initialize", "params": { "protocolVersion": "2025-03-26", "clientInfo": { "name": "claude-code", "version": "2.1.0" } } })).await;
+        assert!(mcp.link().connected);
+        assert_eq!(mcp.link().client.as_deref(), Some("claude-code 2.1.0"));
         assert_eq!(init["result"]["protocolVersion"], "2025-03-26");
         assert_eq!(init["result"]["instructions"], "hello");
 
@@ -291,6 +372,14 @@ mod tests {
 
         let foreign = reqwest::Client::new().post(&info.url).bearer_auth(&token).header("Origin", "https://evil.example").json(&json!({})).send().await.unwrap();
         assert_eq!(foreign.status().as_u16(), 403);
+
+        let mut sse = reqwest::Client::new().get(&info.url).bearer_auth(&token).send().await.unwrap();
+        assert_eq!(sse.headers()["content-type"], "text/event-stream");
+        assert!(sse.chunk().await.unwrap().is_some());
+        assert_eq!(mcp.inner.streams.load(Ordering::Relaxed), 1);
+        drop(sse);
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        // Closing is noticed at the next keepalive write at the latest.
 
         // The token survives a restart.
         assert_eq!(Mcp::new(dir.clone()).inner.token, token);

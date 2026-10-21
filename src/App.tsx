@@ -15,7 +15,7 @@ import { useUi } from "./store/ui";
 import { useApp } from "./store/app";
 import { useShortcuts } from "./lib/shortcuts";
 import { useT } from "./i18n";
-import { restoreMcp } from "./lib/mcp";
+import "./lib/mcp";
 
 const CodeEditorDialog = lazy(() => import("./components/dialogs/CodeEditorDialog"));
 const TerminalPanel = lazy(() => import("./components/terminal/TerminalPanel"));
@@ -36,7 +36,6 @@ function TerminalSlot() {
 
 export default function App() {
   useShortcuts();
-  useEffect(restoreMcp, []);
   const t = useT();
   const view = useApp((s) => s.view);
   const dialog = useUi((s) => s.dialog);

@@ -69,7 +69,7 @@ pub fn run() {
             commands::terminal_close,
             commands::mcp_start,
             commands::mcp_stop,
-            commands::mcp_status,
+            commands::mcp_link,
             commands::mcp_reply,
             commands::frame_rules,
             commands::frame_check,

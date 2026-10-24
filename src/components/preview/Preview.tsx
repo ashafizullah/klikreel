@@ -38,7 +38,7 @@ export function Preview() {
     <div className="flex min-w-0 flex-1 flex-col bg-bg">
       <div ref={boxRef} className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden">
         <div
-          className="relative shrink-0 overflow-hidden shadow-[0_0_0_1px_#2a2d32]"
+          className="grain-free shrink-0 overflow-hidden shadow-[0_0_0_1px_#2e2a22,0_18px_50px_-10px_rgba(0,0,0,0.75)]"
           style={{ width: project.width * scale, height: project.height * scale }}
         >
           <div
@@ -273,7 +273,7 @@ function Transport({ project, time, playing }: { project: Project; time: number;
         <IconButton title={t("preview.toStart")} onClick={() => seek(0)}><SkipBack size={15} /></IconButton>
         <IconButton title={t("preview.prevFrame")} onClick={() => seek(time - frame)}><StepBack size={15} /></IconButton>
         <button
-          className="mx-1 flex h-8 w-8 items-center justify-center rounded-full bg-text text-black hover:bg-white"
+          className="mx-1 flex h-8 w-8 items-center justify-center rounded-full bg-accent text-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.3)] hover:brightness-110"
           title={t("preview.playPause")}
           onClick={toggle}
         >

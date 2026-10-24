@@ -58,7 +58,7 @@ function ActivityBadge() {
   const running = useProduction((s) => s.running || Object.keys(s.busy).length > 0);
   const active = useActivity((s) => s.entries.some((e) => e.kind === "progress"));
   const unseenError = useActivity((s) => s.entries.slice(s.seen).some((e) => e.kind === "error"));
-  if (running || active) return <Loader2 size={11} className="animate-spin text-accent-2" />;
+  if (running || active) return <Loader2 size={11} className="animate-spin text-accent" />;
   if (unseenError) return <span className="h-1.5 w-1.5 rounded-full bg-danger" title={t("brief.activityErrors")} />;
   return null;
 }

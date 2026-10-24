@@ -88,16 +88,16 @@ export function TimelineClip({ clip, track, selected, zoom, height }: { clip: Cl
 
   const color =
     clip.source.type === "html"
-      ? "bg-[#3b2a7a] border-[#7c5cff]"
+      ? "bg-clip-scene border-clip-scene-edge"
       : clip.source.type === "text"
-        ? "bg-[#6b3d12] border-[#f59e0b]"
+        ? "bg-clip-text border-clip-text-edge"
         : track.kind === "audio"
-          ? "bg-[#12452f] border-[#22c55e]"
-          : "bg-[#1d3b52] border-[#3b82f6]";
+          ? "bg-clip-audio border-clip-audio-edge"
+          : "bg-clip-media border-clip-media-edge";
 
   return (
     <div
-      className={`absolute top-1 bottom-1 overflow-hidden rounded-md border ${color} ${selected ? "ring-2 ring-white" : ""} ${drag?.mode === "move" ? "z-30 opacity-80 shadow-xl" : ""} ${track.locked ? "cursor-not-allowed" : "cursor-grab"}`}
+      className={`absolute top-1 bottom-1 overflow-hidden rounded-md border ${color} ${selected ? "ring-2 ring-text ring-offset-1 ring-offset-bg" : ""} ${drag?.mode === "move" ? "z-30 opacity-80 shadow-xl" : ""} ${track.locked ? "cursor-not-allowed" : "cursor-grab"}`}
       style={{ left, width, transform: drag?.mode === "move" ? `translateY(${drag.dy}px)` : undefined }}
       onPointerDown={(e) => begin(e, "move")}
       onDoubleClick={() => clip.source.type === "html" && useUi.getState().open("code")}
@@ -113,7 +113,7 @@ export function TimelineClip({ clip, track, selected, zoom, height }: { clip: Cl
       {asset && (asset.kind === "audio" || asset.hasAudio) && (
         <Wave clip={view} asset={asset} width={width} height={track.kind === "audio" ? height - 22 : 16} zoom={zoom} />
       )}
-      <div className="pointer-events-none absolute top-0 left-0 flex max-w-full items-center gap-1 truncate rounded-br bg-black/45 px-1.5 py-0.5 text-[10px] font-medium text-white">
+      <div className="pointer-events-none absolute top-0 left-0 flex max-w-full items-center gap-1 truncate rounded-br bg-black/40 px-1.5 py-0.5 text-[10px] font-medium text-white">
         {clip.source.type === "html" && <Sparkles size={10} />}
         {clip.source.type === "text" && <Type size={10} />}
         <span className="truncate">{clip.source.type === "text" ? clip.source.text : clip.name}</span>
@@ -161,7 +161,7 @@ function Wave({ clip, asset, width, height, zoom }: { clip: Clip; asset: Asset; 
   }
   return (
     <svg className="pointer-events-none absolute bottom-0 left-0" width={width} height={height}>
-      <path d={d} stroke="rgba(255,255,255,0.55)" strokeWidth={1.2} />
+      <path d={d} stroke="rgba(237,230,216,0.55)" strokeWidth={1.2} />
     </svg>
   );
 }

@@ -43,7 +43,7 @@ export function ProjectThumb({ project }: { project: ProjectMeta }) {
   const { width, height } = project;
   const scale = width && height ? Math.max(size.w / width, size.h / height) : 0;
   return (
-    <div ref={box} className="relative h-28 overflow-hidden bg-gradient-to-br from-[#1f1f24] to-[#0b0b0d]">
+    <div ref={box} className="relative h-28 overflow-hidden bg-gradient-to-br from-[#221e18] to-[#0e0c09]">
       {thumb && visible && scale > 0 ? (
         <iframe
           ref={frame}

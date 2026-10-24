@@ -20,7 +20,7 @@ export function ScenePanel() {
   return (
     <aside className="flex w-[340px] shrink-0 flex-col border-l border-line bg-panel">
       <div className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-line px-3">
-        <span className="text-[12px] font-semibold">{t("scenes.title", { n: scenes.length })}</span>
+        <span className="font-serif text-[14px] font-medium">{t("scenes.title", { n: scenes.length })}</span>
         <div className="flex items-center gap-2">
           {scenes.length > 0 && <SyncAllButton hasVoice={scenes.some((s) => s.voiceDuration)} />}
           <span className="font-mono text-[11px] text-muted">{formatTime(totalDuration(scenes))}</span>
@@ -79,7 +79,7 @@ function SceneCard({ scene, index, count, start, selected }: { scene: Scene; ind
   return (
     <div className={`rounded-lg border bg-panel-2 ${selected ? "border-accent" : "border-line"}`}>
       <div className="flex items-center gap-2 px-2.5 pt-2">
-        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-bg text-[10px] font-semibold" title={t("scenes.number", { n: index + 1 })}>{index + 1}</span>
+        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-bg font-mono text-[10px] font-medium text-accent" title={t("scenes.number", { n: index + 1 })}>{index + 1}</span>
         <input className="min-w-0 flex-1 bg-transparent text-[12px] font-semibold outline-none" value={scene.title} onChange={(e) => store.updateScene(scene.id, { title: e.target.value })} />
         {!generating && needsSync(scene) && (
           <button
@@ -102,7 +102,7 @@ function SceneCard({ scene, index, count, start, selected }: { scene: Scene; ind
           </button>
         )}
         {generating ? (
-          <span className="flex items-center gap-1 text-[10px] text-accent-2" title={busy === "scenes.queued" ? t("scenes.queuedHint") : undefined}>
+          <span className="flex items-center gap-1 text-[10px] text-accent" title={busy === "scenes.queued" ? t("scenes.queuedHint") : undefined}>
             {busy === "scenes.queued" ? <Clock size={11} /> : <Loader2 size={11} className="animate-spin" />}
             {t((busy as Key | undefined) ?? "scenes.generating")}
           </span>

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- New Darkroom look: warm charcoal surfaces, tungsten-amber accents, new typography (Fraunces, IBM Plex Sans and IBM Plex Mono, bundled so they work offline), film-style project cards and new timeline clip colors
+
 ## 0.1.7
 
 - Built-in terminal (Ctrl+` or the terminal button in the top bar), opened in your project folder

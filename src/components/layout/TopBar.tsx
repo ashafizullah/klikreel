@@ -24,11 +24,14 @@ export function TopBar() {
       <span className="truncate text-[12px] text-muted">{ws?.name ?? "Workspace"}</span>
       <span className="text-muted">/</span>
       <input
-        className="w-64 rounded-md bg-transparent px-2 py-1 text-[13px] font-medium outline-none hover:bg-panel-2 focus:bg-panel-2"
+        className="w-64 rounded-md bg-transparent px-2 py-1 font-serif text-[15px] font-medium tracking-[-0.01em] outline-none hover:bg-panel-2 focus:bg-panel-2"
         value={name}
         onChange={(e) => useProject.getState().update((p) => void (p.name = e.target.value))}
       />
-      <span className="text-[11px] text-muted">{dirty ? t("top.saving") : t("top.saved")}</span>
+      <span className="flex items-center gap-1.5 font-mono text-[10.5px] text-muted">
+        <span className={`h-1.5 w-1.5 rounded-full ${dirty ? "animate-pulse bg-accent" : "bg-muted/50"}`} />
+        {dirty ? t("top.saving") : t("top.saved")}
+      </span>
       <div className="flex-1" />
       <McpBadge />
       <IconButton title={t("top.terminal")} active={terminal} onClick={() => useUi.getState().toggleTerminal()}><SquareTerminal size={16} /></IconButton>

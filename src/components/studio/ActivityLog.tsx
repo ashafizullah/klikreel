@@ -5,7 +5,7 @@ import { localizeMessage, useT } from "../../i18n";
 
 const COLOR: Record<ActivityEntry["kind"], string> = {
   info: "text-text",
-  progress: "text-accent-2",
+  progress: "text-accent",
   tool: "text-muted",
   error: "text-danger",
   done: "text-accent",

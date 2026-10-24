@@ -167,11 +167,11 @@ export function Home() {
       <aside className="flex w-64 shrink-0 flex-col border-r border-line bg-panel">
         <div className="flex h-14 items-center gap-2 border-b border-line px-4" data-tauri-drag-region>
           <img src={logo} alt="" className="h-8 w-8" draggable={false} />
-          <span className="text-[13px] font-semibold">KlikReel</span>
+          <span className="font-serif text-[18px] font-medium tracking-[-0.02em]">Klik<span className="text-accent italic">Reel</span></span>
         </div>
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
           <span className="label mb-0">{t("home.workspaces")}</span>
-          <button className="text-muted hover:text-accent" title={t("home.addWorkspace")} onClick={addWorkspace}>
+          <button className="text-muted transition hover:text-accent" title={t("home.addWorkspace")} onClick={addWorkspace}>
             <FolderPlus size={15} />
           </button>
         </div>
@@ -181,7 +181,7 @@ export function Home() {
               key={w.id}
               onClick={() => selectWorkspace(w.id)}
               onContextMenu={(e) => workspaceMenu(e, w)}
-              className={`flex w-full items-start gap-2 rounded-md px-2 py-2 text-left ${w.id === workspaceId ? "bg-panel-2" : "hover:bg-panel-2/60"}`}
+              className={`relative flex w-full items-start gap-2 rounded-md px-2 py-2 text-left transition ${w.id === workspaceId ? "bg-panel-2 before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-accent" : "hover:bg-panel-2/60"}`}
             >
               <Folder size={14} className={`mt-0.5 shrink-0 ${w.id === workspaceId ? "text-accent" : "text-muted"}`} />
               <span className="min-w-0">
@@ -214,9 +214,9 @@ export function Home() {
       <main className="flex min-w-0 flex-1 flex-col">
         {!ws ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-            <FolderPlus size={40} className="text-accent" />
+            <FolderPlus size={40} strokeWidth={1.5} className="text-accent" />
             <div>
-              <h1 className="text-[18px] font-semibold">{t("home.emptyTitle")}</h1>
+              <h1 className="font-serif text-[26px] font-medium tracking-[-0.02em]">{t("home.emptyTitle")}</h1>
               <p className="mt-1 max-w-md text-[12px] leading-relaxed text-muted">
                 {t("home.emptyBody")}
               </p>
@@ -225,11 +225,11 @@ export function Home() {
           </div>
         ) : (
           <>
-            <header className="flex h-14 shrink-0 items-center justify-between border-b border-line px-6" data-tauri-drag-region>
+            <header className="flex h-16 shrink-0 items-center justify-between border-b border-line px-6" data-tauri-drag-region>
               <div className="group/title min-w-0">
                 <div className="flex items-center gap-1.5">
                   <h1
-                    className="cursor-text truncate text-[15px] font-semibold"
+                    className="cursor-text truncate font-serif text-[20px] font-medium tracking-[-0.015em]"
                     title={t("home.renameWorkspace")}
                     onDoubleClick={() => setRenaming({ kind: "workspace", id: ws.id, name: ws.name })}
                   >
@@ -243,7 +243,7 @@ export function Home() {
                     <Pencil size={12} />
                   </button>
                 </div>
-                <p className="truncate text-[11px] text-muted">
+                <p className="truncate font-mono text-[10.5px] text-muted">
                   {ws.path} · {t("home.workspaceUsage", { n: ws.projectCount ?? 0, size: formatMB(ws.size ?? 0) })}
                 </p>
               </div>
@@ -266,23 +266,25 @@ export function Home() {
             <div className="flex-1 overflow-y-auto p-6">
               {projects.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 py-20 text-center text-[12px] text-muted">
-                  <Film size={32} />
+                  <Film size={32} strokeWidth={1.5} className="text-accent/70" />
                   {t("home.noProjects")}
                   <Button variant="primary" onClick={() => setCreating(true)}><Plus size={14} /> {t("home.firstProject")}</Button>
                 </div>
               ) : (
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
-                  {projects.map((p) => (
+                  {projects.map((p, i) => (
                     <div
                       key={p.id}
-                      className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-panel ${selected.has(p.id) ? "border-accent ring-1 ring-accent" : "border-line hover:border-accent"}`}
+                      style={{ animationDelay: `${Math.min(i, 12) * 40}ms` }}
+                      className={`group relative animate-rise cursor-pointer overflow-hidden rounded-lg border bg-panel transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_30px_-12px_rgba(0,0,0,0.8)] ${selected.has(p.id) ? "border-accent ring-1 ring-accent" : "border-line hover:border-accent/70"}`}
                       onClick={(e) => (selected.size > 0 || e.metaKey || e.ctrlKey ? toggleSelect(p.id) : openProject(p.id))}
                       onContextMenu={(e) => projectMenu(e, p)}
                     >
+                      <div className="sprockets h-2.5 border-b border-line bg-[#120f0b]" />
                       <ProjectThumb project={p} />
                       <button
-                        className={`absolute top-2 left-2 flex h-5 w-5 items-center justify-center rounded border ${
-                          selected.has(p.id) ? "border-accent bg-accent text-black" : `border-white/60 bg-black/50 text-transparent ${selected.size ? "" : "hidden group-hover:flex"}`
+                        className={`absolute top-4.5 left-2 flex h-5 w-5 items-center justify-center rounded border ${
+                          selected.has(p.id) ? "border-accent bg-accent text-ink" : `border-white/60 bg-black/50 text-transparent ${selected.size ? "" : "hidden group-hover:flex"}`
                         }`}
                         title={t(selected.has(p.id) ? "home.deselect" : "home.select")}
                         onClick={(e) => {
@@ -303,7 +305,7 @@ export function Home() {
                         >
                           {p.name}
                         </div>
-                        <div className="mt-0.5 text-[11px] text-muted">
+                        <div className="mt-1 font-mono text-[10.5px] text-muted">
                           {t("home.projectMeta", {
                             w: p.width,
                             h: p.height,
@@ -314,7 +316,7 @@ export function Home() {
                         </div>
                       </div>
                       <button
-                        className={`absolute top-2 right-10 hidden rounded-md bg-black/60 p-1.5 text-muted hover:text-accent ${selected.size ? "" : "group-hover:block"}`}
+                        className={`absolute top-4.5 right-10 hidden rounded-md bg-black/60 p-1.5 text-muted hover:text-accent ${selected.size ? "" : "group-hover:block"}`}
                         title={t("home.renameProject")}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -324,7 +326,7 @@ export function Home() {
                         <Pencil size={13} />
                       </button>
                       <button
-                        className={`absolute top-2 right-2 hidden rounded-md bg-black/60 p-1.5 text-muted hover:text-danger ${selected.size ? "" : "group-hover:block"}`}
+                        className={`absolute top-4.5 right-2 hidden rounded-md bg-black/60 p-1.5 text-muted hover:text-danger ${selected.size ? "" : "group-hover:block"}`}
                         title={t("home.deleteProject")}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -379,9 +381,9 @@ function NewProjectDialog({ workspaceId, onClose }: { workspaceId: string; onClo
           <span className="label">{t("home.format")}</span>
           <div className="grid grid-cols-3 gap-2">
             {FORMATS.map((f) => (
-              <button key={f.id} onClick={() => setFormat(f.id)} className={`flex flex-col items-center gap-2 rounded-lg border p-3 ${format === f.id ? "border-accent bg-accent/10" : "border-line hover:border-muted"}`}>
+              <button key={f.id} onClick={() => setFormat(f.id)} className={`flex flex-col items-center gap-2 rounded-lg border p-3 transition ${format === f.id ? "border-accent bg-accent/10 text-accent" : "border-line text-muted hover:border-muted hover:text-text"}`}>
                 <div className="rounded-sm border border-current" style={{ width: (f.w / Math.max(f.w, f.h)) * 40, height: (f.h / Math.max(f.w, f.h)) * 40 }} />
-                <span className="text-[12px] font-semibold">{f.label}</span>
+                <span className="font-mono text-[12px] font-medium">{f.label}</span>
                 <span className="text-center text-[10px] text-muted">{t(f.hint)}</span>
               </button>
             ))}

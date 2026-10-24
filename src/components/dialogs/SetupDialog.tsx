@@ -41,7 +41,7 @@ function InstallStep({ what, title, body, command, status }: {
   };
   return (
     <div className="rounded-lg border border-line bg-panel-2 p-3">
-      <div className="text-[13px] font-semibold">{title}</div>
+      <div className="font-serif text-[15px] font-medium">{title}</div>
       <div className="mt-0.5 text-[12px] text-muted">{body}</div>
       <div className="mt-2.5 text-[12px]">
         {mac ? t(noBrew ? "setup.brewMissingHint" : "setup.brewHint") : t("setup.otherHint")}

@@ -109,7 +109,7 @@ export function Timeline() {
               <TrackHeader track={track} />
               <div
                 data-track-id={track.id}
-                className={`relative shrink-0 ${track.kind === "video" ? "bg-[#15171a]" : "bg-[#131416]"}`}
+                className={`relative shrink-0 ${track.kind === "video" ? "bg-track-video" : "bg-track-audio"}`}
                 style={{ width: contentW }}
                 onPointerDown={(e) => {
                   if (e.target !== e.currentTarget) return;
@@ -126,8 +126,8 @@ export function Timeline() {
 
           {/* Playhead */}
           <div className="pointer-events-none absolute top-0 bottom-0 z-20" style={{ left: HEADER_W + time * zoom }}>
-            <div className="absolute top-0 bottom-0 w-px -translate-x-1/2 bg-white" />
-            <div className="absolute top-0 h-3 w-3 -translate-x-1/2 rounded-b-sm bg-white" />
+            <div className="absolute top-0 bottom-0 w-px -translate-x-1/2 bg-accent shadow-[0_0_6px_rgba(240,168,58,0.5)]" />
+            <div className="absolute top-0 h-3 w-3 -translate-x-1/2 rounded-b-sm bg-accent" />
           </div>
           <ClipMenu />
           {guide !== null && (

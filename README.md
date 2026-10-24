@@ -107,3 +107,7 @@ KlikReel is free. If it saves you time, **[buy me an AI token on Trakteer](https
 ## License
 
 [MIT](LICENSE)
+
+The interface fonts (Fraunces, IBM Plex Sans and IBM Plex Mono) are bundled under the SIL Open Font License 1.1; see [`public/licenses/fonts.txt`](public/licenses/fonts.txt), which also ships inside the app.
+
+Claude and Claude Code are trademarks of Anthropic. KlikReel is an independent project and is not affiliated with or endorsed by Anthropic.

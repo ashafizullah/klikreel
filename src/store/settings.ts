@@ -120,7 +120,7 @@ export const useSettings = create<SettingsState>()(
       };
     },
     {
-      name: "aive-settings-v2",
+      name: "klikreel-settings",
       version: 2,
       // v0–v1 kept TTS settings on an AI profile; give voice its own profile.
       // Keys are not copied: the voice profile needs its own key.

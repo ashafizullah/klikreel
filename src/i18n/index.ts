@@ -14,7 +14,7 @@ export const LOCALES: { id: Locale; label: string }[] = [
 const dicts: Record<Locale, Record<Key, string>> = { en, id };
 
 export const useLocale = create<{ locale: Locale; setLocale(l: Locale): void }>()(
-  persist((set) => ({ locale: "en", setLocale: (locale) => set({ locale }) }), { name: "aive-locale" }),
+  persist((set) => ({ locale: "en", setLocale: (locale) => set({ locale }) }), { name: "klikreel-locale" }),
 );
 
 export type Vars = Record<string, string | number>;

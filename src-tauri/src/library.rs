@@ -275,7 +275,7 @@ mod tests {
 
     #[test]
     fn workspace_and_project_roundtrip() {
-        let root = std::env::temp_dir().join(format!("aive-lib-{}", uuid::Uuid::new_v4().simple()));
+        let root = std::env::temp_dir().join(format!("klikreel-lib-{}", uuid::Uuid::new_v4().simple()));
         let lib = Library::new(root.clone());
         let ws = lib.add_workspace(std::env::temp_dir().to_str().unwrap(), None).unwrap();
         assert_eq!(lib.add_workspace(std::env::temp_dir().to_str().unwrap(), None).unwrap().id, ws.id);

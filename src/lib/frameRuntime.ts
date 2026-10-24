@@ -13,15 +13,15 @@ if (typeof window.__seek !== "function") window.__seek = function () {};
 if (window.gsap) { gsap.ticker.lagSmoothing(0); gsap.ticker.sleep(); }
 window.addEventListener("message", function (e) {
   var d = e.data;
-  if (d && d.type === "aive:seek" && typeof window.__seek === "function") {
-    try { window.__seek(d.t); } catch (err) { parent.postMessage({ type: "aive:error", message: String(err) }, "*"); }
+  if (d && d.type === "klikreel:seek" && typeof window.__seek === "function") {
+    try { window.__seek(d.t); } catch (err) { parent.postMessage({ type: "klikreel:error", message: String(err) }, "*"); }
   }
 });
-window.addEventListener("error", function (e) { parent.postMessage({ type: "aive:error", message: e.message }, "*"); });
+window.addEventListener("error", function (e) { parent.postMessage({ type: "klikreel:error", message: e.message }, "*"); });
 window.addEventListener("load", function () {
   window.__frameReady = true;
   try { window.__seek(0); } catch (e) {}
-  parent.postMessage({ type: "aive:ready" }, "*");
+  parent.postMessage({ type: "klikreel:ready" }, "*");
 });
 `;
 
@@ -52,5 +52,5 @@ export function buildFrameDoc(html: string, params: Record<string, string>, asse
 
 /** Re-runs the frame's __seek(t) without reloading it (preview only). */
 export function seekFrame(iframe: HTMLIFrameElement | null, t: number): void {
-  iframe?.contentWindow?.postMessage({ type: "aive:seek", t }, "*");
+  iframe?.contentWindow?.postMessage({ type: "klikreel:seek", t }, "*");
 }

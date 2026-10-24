@@ -185,8 +185,8 @@ function HtmlLayer({ clip, project, visible, localTime, opacity }: {
   useEffect(() => {
     const onMsg = (e: MessageEvent) => {
       if (e.source !== ref.current?.contentWindow) return;
-      if (e.data?.type === "aive:ready") seekFrame(ref.current, timeRef.current);
-      if (e.data?.type === "aive:error") console.warn(`[HTML Frame ${clip.name}]`, e.data.message);
+      if (e.data?.type === "klikreel:ready") seekFrame(ref.current, timeRef.current);
+      if (e.data?.type === "klikreel:error") console.warn(`[HTML Frame ${clip.name}]`, e.data.message);
     };
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);

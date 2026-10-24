@@ -55,8 +55,8 @@ export default function CodeEditorDialog() {
               srcDoc={doc}
               className="absolute top-0 left-0 origin-top-left border-0"
               style={{ width: project.width, height: project.height, transform: `scale(${420 / project.width})` }}
-              onLoad={(e) => e.currentTarget.contentWindow?.postMessage({ type: "aive:seek", t: previewT }, "*")}
-              ref={(el) => el?.contentWindow?.postMessage({ type: "aive:seek", t: previewT }, "*")}
+              onLoad={(e) => e.currentTarget.contentWindow?.postMessage({ type: "klikreel:seek", t: previewT }, "*")}
+              ref={(el) => el?.contentWindow?.postMessage({ type: "klikreel:seek", t: previewT }, "*")}
             />
           </div>
           <label className="block">

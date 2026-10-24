@@ -123,11 +123,11 @@ pub async fn run(mut job: RenderJob, cancel: Arc<AtomicBool>, emit: impl Fn(Rend
 #[cfg(test)]
 mod tests {
     /// End-to-end export. Run with:
-    /// AIVE_JOB=/path/job.json cargo test render_job_from_env -- --ignored --nocapture
+    /// KLIKREEL_JOB=/path/job.json cargo test render_job_from_env -- --ignored --nocapture
     #[tokio::test]
     #[ignore]
     async fn render_job_from_env() {
-        let path = std::env::var("AIVE_JOB").expect("AIVE_JOB not set");
+        let path = std::env::var("KLIKREEL_JOB").expect("KLIKREEL_JOB not set");
         let job: super::RenderJob = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
         let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let start = std::time::Instant::now();

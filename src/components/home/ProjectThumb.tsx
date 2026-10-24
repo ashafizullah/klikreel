@@ -34,7 +34,7 @@ export function ProjectThumb({ project }: { project: ProjectMeta }) {
   useEffect(() => {
     if (!thumb || !visible) return;
     const onMessage = (e: MessageEvent) => {
-      if (e.source === frame.current?.contentWindow && e.data?.type === "aive:ready") seekFrame(frame.current, thumbTime(thumb.duration));
+      if (e.source === frame.current?.contentWindow && e.data?.type === "klikreel:ready") seekFrame(frame.current, thumbTime(thumb.duration));
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);

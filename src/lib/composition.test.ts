@@ -8,7 +8,7 @@ test("merges overlapping overlay ranges", () => {
 
 test("runtime is injected before user scripts", () => {
   const doc = buildFrameDoc("<html><head><title>x</title></head><body><script>window.__seek=t=>t</script></body></html>", { a: "1" });
-  expect(doc.indexOf("aive:seek")).toBeLessThan(doc.indexOf("window.__seek=t=>t"));
+  expect(doc.indexOf("klikreel:seek")).toBeLessThan(doc.indexOf("window.__seek=t=>t"));
   expect(doc).toContain('"a":"1"');
   expect(buildFrameDoc("<div>hi</div>", {})).toContain("<body");
 });

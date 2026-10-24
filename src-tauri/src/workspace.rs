@@ -290,7 +290,7 @@ mod tests {
     use super::*;
 
     fn fixture() -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("aive-ws-{}", uuid::Uuid::new_v4().simple()));
+        let dir = std::env::temp_dir().join(format!("klikreel-ws-{}", uuid::Uuid::new_v4().simple()));
         std::fs::create_dir_all(dir.join("src")).unwrap();
         std::fs::create_dir_all(dir.join("node_modules/x")).unwrap();
         std::fs::write(dir.join("README.md"), "# Invoicely\nKirim invoice otomatis").unwrap();

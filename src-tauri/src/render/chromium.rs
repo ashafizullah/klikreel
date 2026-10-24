@@ -26,7 +26,7 @@ impl FrameRenderer {
     pub async fn launch(html: &str, width: u32, height: u32) -> AppResult<Self> {
         let chrome =
             bin::chrome().ok_or_else(|| AppError::msg("Google Chrome / Chromium not found. Install Chrome to render HTML scenes."))?;
-        let profile = std::env::temp_dir().join(format!("aive-chrome-{}", uuid::Uuid::new_v4().simple()));
+        let profile = std::env::temp_dir().join(format!("klikreel-chrome-{}", uuid::Uuid::new_v4().simple()));
         let config = BrowserConfig::builder()
             .chrome_executable(chrome)
             .new_headless_mode()

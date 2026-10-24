@@ -3,7 +3,7 @@
 ## 0.1.10
 
 - Settings, AI and voice profiles and API keys are now stored under the KlikReel name only. Ones saved by earlier versions are not read anymore: set up your profiles and enter your API keys again
-- Updating straight from 0.1.8 or earlier: the project library is not carried over either; add your workspaces again (project files in them are untouched)
+- Updating straight from 0.1.8 or earlier: projects and workspaces don't show up either. They are still on disk; to bring them back, quit KlikReel and copy the old folder's contents into the new one: on macOS `~/Library/Application Support/com.ashafizullah.aivideoeditor` → `com.ashafizullah.klikreel`, on Windows `%APPDATA%\com.ashafizullah.aivideoeditor` → `com.ashafizullah.klikreel`, on Linux `~/.local/share/com.ashafizullah.aivideoeditor` → `com.ashafizullah.klikreel`
 
 ## 0.1.9
 

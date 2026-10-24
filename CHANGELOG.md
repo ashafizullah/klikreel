@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.9
+
+- Settings → Open-source licenses shows the license of every bundled package, the fonts included
+
 ## 0.1.8
 
 - New Darkroom look: warm charcoal surfaces, tungsten-amber accents, new typography (Fraunces, IBM Plex Sans and IBM Plex Mono, bundled so they work offline), film-style project cards and new timeline clip colors

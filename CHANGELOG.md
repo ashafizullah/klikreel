@@ -3,6 +3,7 @@
 ## 0.1.10
 
 - Settings, AI and voice profiles and API keys are now stored under the KlikReel name only. Ones saved by earlier versions are not read anymore: set up your profiles and enter your API keys again
+- Updating straight from 0.1.8 or earlier: the project library is not carried over either; add your workspaces again (project files in them are untouched)
 
 ## 0.1.9
 

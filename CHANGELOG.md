@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- The app window now has a Content Security Policy: the interface and scene previews can't load scripts, fonts or images from the internet or send data anywhere except to KlikReel itself
+- Security updates for the TLS libraries used for AI, voice and update requests (rustls, rustls-webpki, webpki-root-certs) and for DOMPurify in the code editor
+
 ## 0.1.10
 
 - Settings, AI and voice profiles and API keys are now stored under the KlikReel name only. Ones saved by earlier versions are not read anymore: set up your profiles and enter your API keys again

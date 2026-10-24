@@ -2,7 +2,7 @@
 
 ## 0.1.10
 
-- Saved API keys and settings move to storage named after KlikReel instead of the app's first name. Nothing to do: they carry over the first time they are used
+- Settings, AI and voice profiles and API keys are now stored under the KlikReel name only. Ones saved by earlier versions are not read anymore: set up your profiles and enter your API keys again
 
 ## 0.1.9
 

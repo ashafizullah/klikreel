@@ -6,15 +6,12 @@ mod keys;
 mod library;
 mod mcp;
 mod media;
-mod migrate;
 mod render;
 mod terminal;
 mod workspace;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let context = tauri::generate_context!();
-    migrate::run(&context.config().identifier);
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -78,6 +75,6 @@ pub fn run() {
             commands::frame_check,
             commands::frame_snapshot,
         ])
-        .run(context)
+        .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

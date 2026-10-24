@@ -13,8 +13,6 @@ use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
 
 const SERVICE: &str = "com.ashafizullah.klikreel";
-/// Keychain service up to 0.1.9; a key found there moves to [`SERVICE`] when first read.
-const OLD_SERVICE: &str = "com.ashafizullah.aivideoeditor";
 
 static INDEX_PATH: OnceLock<PathBuf> = OnceLock::new();
 static CACHE: OnceLock<Mutex<HashMap<String, Option<String>>>> = OnceLock::new();
@@ -48,29 +46,14 @@ fn validate(profile_id: &str) -> AppResult<()> {
     if valid { Ok(()) } else { Err(AppError::msg("Invalid profile id")) }
 }
 
-fn entry_in(service: &str, profile_id: &str) -> AppResult<Entry> {
-    validate(profile_id)?;
-    Ok(Entry::new(service, &format!("profile:{profile_id}"))?)
-}
-
 fn entry(profile_id: &str) -> AppResult<Entry> {
-    entry_in(SERVICE, profile_id)
+    validate(profile_id)?;
+    Ok(Entry::new(SERVICE, &format!("profile:{profile_id}"))?)
 }
 
 fn read_keychain(profile_id: &str) -> AppResult<Option<String>> {
     match entry(profile_id)?.get_password() {
-        Ok(k) => return Ok(Some(k)),
-        Err(keyring::Error::NoEntry) => {}
-        Err(e) => return Err(e.into()),
-    }
-    let old = entry_in(OLD_SERVICE, profile_id)?;
-    match old.get_password() {
-        Ok(k) => {
-            // The old entry goes only once the new one is written.
-            entry(profile_id)?.set_password(&k)?;
-            let _ = old.delete_credential();
-            Ok(Some(k))
-        }
+        Ok(k) => Ok(Some(k)),
         Err(keyring::Error::NoEntry) => Ok(None),
         Err(e) => Err(e.into()),
     }
@@ -130,7 +113,6 @@ pub fn delete(profile_id: &str) -> AppResult<()> {
         Ok(()) | Err(keyring::Error::NoEntry) => {}
         Err(e) => return Err(e.into()),
     }
-    let _ = entry_in(OLD_SERVICE, profile_id)?.delete_credential();
     cache().lock().unwrap().insert(profile_id.to_string(), None);
     let mut index = read_index().unwrap_or_default();
     index.remove(profile_id);

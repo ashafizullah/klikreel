@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.11
 
 - The app window now has a Content Security Policy: the interface and scene previews can't load scripts, fonts or images from the internet or send data anywhere except to KlikReel itself
 - Security updates for the TLS libraries used for AI, voice and update requests (rustls, rustls-webpki, webpki-root-certs) and for DOMPurify in the code editor

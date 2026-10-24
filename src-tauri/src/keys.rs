@@ -12,6 +12,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
 
+// The app's first bundle identifier, kept so saved keys stay where they are.
 const SERVICE: &str = "com.ashafizullah.aivideoeditor";
 
 static INDEX_PATH: OnceLock<PathBuf> = OnceLock::new();

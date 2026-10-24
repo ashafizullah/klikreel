@@ -2,6 +2,7 @@
 
 ## 0.1.9
 
+- App identifier changed from `com.ashafizullah.aivideoeditor` to `com.ashafizullah.klikreel`, matching the other Klik apps. Settings, AI and voice profiles and the project library move over on first launch. On macOS, the keychain may ask once per saved API key; choose Always Allow.
 - Settings → Open-source licenses shows the license of every bundled package, the fonts included
 
 ## 0.1.8

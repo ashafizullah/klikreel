@@ -25,6 +25,7 @@ export function SettingsDialog() {
     return ipc.apiKeysStatus([...st.profiles.map((p) => p.id), ...st.voiceProfiles.map((v) => v.id)]).then(setKeys).catch(notifyError);
   };
   useEffect(() => void refresh(), [s.profiles.length, s.voiceProfiles.length]);
+  const [notices, setNotices] = useState(false);
 
   return (
     <Modal title={t("settings.title")} onClose={close} width={800}>
@@ -41,10 +42,24 @@ export function SettingsDialog() {
           ))}
         </div>
         <div className="flex items-center gap-2 text-[12px] text-muted">
+          <button className="mr-2 hover:text-text" onClick={() => setNotices(true)}>{t("settings.licenses")}</button>
           {t("settings.appLanguage")} <LanguageToggle />
         </div>
       </div>
       {tab === "ai" ? <AiTab keys={keys} refresh={refresh} /> : <VoiceTab keys={keys} refresh={refresh} />}
+      {notices && <NoticesDialog onClose={() => setNotices(false)} />}
+    </Modal>
+  );
+}
+
+/** Licenses of the third-party software bundled into the app (THIRD_PARTY_NOTICES.md). */
+function NoticesDialog({ onClose }: { onClose(): void }) {
+  const t = useT();
+  const [text, setText] = useState("");
+  useEffect(() => void import("../../../THIRD_PARTY_NOTICES.md?raw").then((m) => setText(m.default)), []);
+  return (
+    <Modal title={t("settings.licenses")} onClose={onClose} width={720}>
+      <pre className="font-mono text-[11px] leading-relaxed whitespace-pre-wrap text-muted">{text || "…"}</pre>
     </Modal>
   );
 }

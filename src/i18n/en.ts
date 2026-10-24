@@ -280,6 +280,7 @@ const en = {
   "settings.keyStored": "API key saved to the Keychain",
   "settings.note": "OpenAI-compatible covers OpenAI, OpenRouter, Gemini, Groq, Ollama, LM Studio and any service with a /chat/completions endpoint. Keys are stored in the Keychain, never in files.",
   "settings.appLanguage": "App language",
+  "settings.licenses": "Open-source licenses",
 
   // model picker
   "picker.none": "No AI profile yet",

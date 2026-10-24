@@ -271,6 +271,7 @@ const id: Record<Key, string> = {
   "settings.keyStored": "API key disimpan di Keychain",
   "settings.note": "OpenAI-compatible mencakup OpenAI, OpenRouter, Gemini, Groq, Ollama, LM Studio, dan layanan lain yang memakai endpoint /chat/completions. Key disimpan di Keychain, bukan di file.",
   "settings.appLanguage": "Bahasa aplikasi",
+  "settings.licenses": "Lisensi open source",
 
   "picker.none": "Belum ada profil AI",
   "picker.settings": "Profil AI",

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.10
+
+- Saved API keys and settings move to storage named after KlikReel instead of the app's first name. Nothing to do: they carry over the first time they are used
+
 ## 0.1.9
 
 - App identifier changed from `com.ashafizullah.aivideoeditor` to `com.ashafizullah.klikreel`, matching the other Klik apps. Settings, AI and voice profiles and the project library move over on first launch. On macOS, the keychain may ask once per saved API key; choose Always Allow.

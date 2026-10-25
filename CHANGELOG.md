@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.12
+
+- Settings → Open-source licenses now lists every Rust crate compiled into the app with its license text, alongside the interface packages
+- GSAP's full license is shown there too, with a note that it is free to use but not open source
+- Includes the changes from 0.1.11, which wasn't released on its own: a Content Security Policy for the app window, so the interface and scene previews can't load scripts, fonts or images from the internet or send data anywhere except to KlikReel itself, and security updates for the TLS libraries (rustls, rustls-webpki, webpki-root-certs) and for DOMPurify in the code editor
+
 ## 0.1.11
 
 - The app window now has a Content Security Policy: the interface and scene previews can't load scripts, fonts or images from the internet or send data anywhere except to KlikReel itself

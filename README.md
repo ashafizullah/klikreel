@@ -35,20 +35,23 @@
 - **Revise by chat**: ask the AI to change a scene, its narration or the order, and it edits the storyboard for you
 - **Bring your own model**: Anthropic or any OpenAI-compatible API; keys are stored in the OS keychain
 - **Built-in terminal** (Ctrl+`) opened in your project folder
-- **Works with Claude Code**: turn on the local MCP server and your own Claude Code can edit scenes, write their HTML, record voiceovers, take snapshots and export
+- **Works with your own AI agent**: turn on the local MCP server and Claude Code, Codex, Gemini CLI or any other MCP client can edit scenes, write their HTML, record voiceovers, take snapshots and export
 - **Export** to MP4 with headless Chrome and ffmpeg
 - **Auto-update** from GitHub Releases (signed packages; checked at launch at most once a day, or via *Check for updates* on the home screen)
 - **English and Bahasa Indonesia** interface
 
-## Using Claude Code
+## Using your own AI agent
 
-KlikReel can be driven by [Claude Code](https://claude.com/claude-code) installed on your own computer, signed in with your own account (including Pro/Max plans):
+KlikReel runs a local MCP server that any MCP client on your computer can use, signed in with your own account: [Claude Code](https://claude.com/claude-code) (including Pro/Max plans), [Codex](https://github.com/openai/codex), [Gemini CLI](https://github.com/google-gemini/gemini-cli), or an editor such as Cursor.
 
-1. Open a video project, open the terminal (Ctrl+`) and click **Connect Claude Code**.
-2. Enable the local MCP server and copy the `claude mcp add …` command. Run it once in any terminal.
-3. Start `claude` and ask for changes, e.g. *"rewrite the opening scene so it shows the dashboard"*. Edits appear live in KlikReel and can be undone.
+1. Open a video project, open the terminal (Ctrl+`) and click **Connect AI agent**.
+2. Enable the local MCP server, pick your agent and copy its setup:
+   - **Claude Code** and **Gemini CLI**: a `claude mcp add …` / `gemini mcp add …` command. Run it once in any terminal.
+   - **Codex**: a `[mcp_servers.klikreel]` block. Paste it into `~/.codex/config.toml`.
+   - **Other**: an `mcpServers` JSON entry for your client's MCP config (e.g. `~/.cursor/mcp.json`).
+3. Start the agent and ask for changes, e.g. *"rewrite the opening scene so it shows the dashboard"*. Edits appear live in KlikReel and can be undone.
 
-The server only listens on `127.0.0.1` and requires a secret token. KlikReel never launches Claude Code, sends it prompts, reads its output or touches your Claude credentials: you add the server and run Claude Code yourself.
+The server only listens on `127.0.0.1` and requires a secret token. KlikReel never launches your agent, sends it prompts, reads its output or touches its credentials: you add the server and run the agent yourself.
 
 ## Download
 
@@ -74,7 +77,7 @@ curl -fsSL https://raw.githubusercontent.com/ashafizullah/klikreel/main/install.
 - Google Chrome, Chromium, Edge or Brave (used for rendering)
 - An API key for a chat model, and one for text-to-speech if you want voiceovers
 
-ffmpeg, the browser and Claude Code are not bundled: KlikReel uses the copies installed on your computer. When ffmpeg or a browser is missing, it shows the command that installs it (Homebrew on macOS, winget on Windows, apt on Linux).
+ffmpeg, the browser and your AI agent are not bundled: KlikReel uses the copies installed on your computer. When ffmpeg or a browser is missing, it shows the command that installs it (Homebrew on macOS, winget on Windows, apt on Linux).
 
 ## Privacy
 
@@ -116,7 +119,7 @@ KlikReel is free. If it saves you time, **[buy me an AI token on Trakteer](https
 
 The app bundles third-party software, including the interface fonts Fraunces, IBM Plex Sans and IBM Plex Mono (SIL Open Font License 1.1) and the [GSAP](https://gsap.com) animation library, which is free to use but not open source: it is under GSAP's own [Standard "No Charge" License](https://gsap.com/standard-license), not MIT. Their licenses are in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md), which the app also shows under Settings → Open-source licenses. Run `bun run notices` after changing dependencies.
 
-Claude and Claude Code are trademarks of Anthropic. OpenAI, xAI, GSAP, Google Chrome and other names mentioned are trademarks of their respective owners. KlikReel is an independent project and is not affiliated with or endorsed by any of them.
+Claude and Claude Code are trademarks of Anthropic. OpenAI, Codex, Gemini, xAI, GSAP, Google Chrome and other names mentioned are trademarks of their respective owners. KlikReel is an independent project and is not affiliated with or endorsed by any of them.
 
 <p>
   <a href="https://github.com/ashafizullah"><img src="https://github.com/ashafizullah.png?size=64" width="32" height="32" alt="" align="left" style="border-radius:50%"></a>

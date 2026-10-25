@@ -1,6 +1,6 @@
 [package]
 name = "klikreel"
-version = "0.1.15"
+version = "0.1.16"
 description = "Turn a prompt and your codebase into a narrated product promo video"
 authors = ["Adam Suchi Hafizullah"]
 edition = "2024"

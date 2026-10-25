@@ -341,7 +341,7 @@ pub fn terminal_close(id: String, state: State<'_, Terminals>) {
     state.close(&id);
 }
 
-// ---- MCP (Claude Code) -------------------------------------------------------
+// ---- MCP (Claude Code, Codex, …) ---------------------------------------------
 
 use crate::mcp::{Mcp, McpCall, McpInfo, McpLink};
 

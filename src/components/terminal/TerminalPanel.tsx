@@ -10,6 +10,7 @@ import { notifyError, useUi } from "../../store/ui";
 import { useT } from "../../i18n";
 import { Button, IconButton } from "../ui";
 import { McpConnect } from "./McpConnect";
+import { mcpClient, useMcp } from "../../lib/mcp";
 
 const decode = (b64: string) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
 
@@ -26,7 +27,7 @@ export default function TerminalPanel() {
   const [generation, setGeneration] = useState(0);
   const [exited, setExited] = useState(false);
   const [height, setHeight] = useState(260);
-  // The shell keeps its folder when another project opens, so a running Claude Code survives open_project.
+  // The shell keeps its folder when another project opens, so a running agent survives open_project.
   const latestCwd = useRef(cwd);
   latestCwd.current = cwd;
   const [shellCwd, setShellCwd] = useState(cwd);
@@ -87,10 +88,11 @@ export default function TerminalPanel() {
     });
   }, [visible, height]);
 
-  const runClaude = () => {
-    if (!session.current) return;
-    // Only types the command: the user presses Enter and runs Claude Code themselves.
-    ipc.terminalWrite(session.current, "claude").catch(notifyError);
+  const agent = mcpClient(useMcp((s) => s.client));
+  const runAgent = () => {
+    if (!session.current || !agent.bin) return;
+    // Only types the command: the user presses Enter and runs the agent themselves.
+    ipc.terminalWrite(session.current, agent.bin).catch(notifyError);
     term.current?.focus();
   };
 
@@ -115,9 +117,11 @@ export default function TerminalPanel() {
         <span className="truncate text-[11px] text-muted">{shellCwd}</span>
         <div className="flex-1" />
         <McpConnect />
-        <Button variant="ghost" className="py-1" onClick={runClaude} disabled={exited} title={t("terminal.runClaudeHint")}>
-          <Sparkles size={13} /> {t("terminal.runClaude")}
-        </Button>
+        {agent.bin && (
+          <Button variant="ghost" className="py-1" onClick={runAgent} disabled={exited} title={t("terminal.runAgentHint", { bin: agent.bin, name: agent.name })}>
+            <Sparkles size={13} /> {t("terminal.runAgent", { bin: agent.bin })}
+          </Button>
+        )}
         <IconButton title={t("terminal.restart")} onClick={() => setGeneration((g) => g + 1)}><RotateCcw size={14} /></IconButton>
         <IconButton title={t("terminal.hide")} onClick={() => useUi.getState().toggleTerminal()}><ChevronDown size={16} /></IconButton>
       </div>

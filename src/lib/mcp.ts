@@ -1,4 +1,5 @@
-// Tools the local MCP server offers to the user's own Claude Code. The Rust
+// Tools the local MCP server offers to the user's own coding agent (Claude
+// Code, Codex, Gemini CLI or any other MCP client). The Rust
 // side relays each call here; edits go through the same stores as the UI, so
 // the preview updates live and everything can be undone.
 import { useEffect } from "react";
@@ -366,17 +367,18 @@ function toContent(out: unknown): Content[] {
 }
 
 async function handle(call: McpCall) {
-  const line = track(`Claude Code · ${call.name}`);
+  const who = agentName(useMcp.getState().link?.client);
+  const line = track(`${who} · ${call.name}`);
   let result: { content: Content[]; isError?: boolean };
   try {
     if (!ALLOWED.has(call.name)) throw new Error(`unknown tool: ${call.name}`);
     if (!PROJECTLESS.has(call.name) && useApp.getState().view !== "project") throw new Error("No video project is open in KlikReel. Use list_projects, then open_project or create_project.");
-    result = { content: toContent(await run(call.name, call.arguments ?? {}, (p) => line.progress(`Claude Code · ${call.name} ${p}`))) };
-    line.done(`Claude Code · ${call.name}`);
+    result = { content: toContent(await run(call.name, call.arguments ?? {}, (p) => line.progress(`${who} · ${call.name} ${p}`))) };
+    line.done(`${who} · ${call.name}`);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     result = { content: [{ type: "text", text: msg }], isError: true };
-    line.fail(`Claude Code · ${call.name}: ${msg}`);
+    line.fail(`${who} · ${call.name}: ${msg}`);
   }
   await invoke("mcp_reply", { id: call.id, result });
 }
@@ -390,15 +392,18 @@ export interface McpLink {
 
 interface McpState {
   enabled: boolean;
+  client: McpClientId;
   info: McpInfo | null;
   link: McpLink | null;
   setEnabled(on: boolean): Promise<void>;
+  setClient(client: McpClientId): void;
 }
 
 export const useMcp = create<McpState>()(
   persist(
     (set) => ({
       enabled: false,
+      client: "claude",
       info: null,
       link: null,
       setEnabled: async (enabled) => {
@@ -413,12 +418,13 @@ export const useMcp = create<McpState>()(
         const info = await invoke<McpInfo>("mcp_start", { tools, instructions: INSTRUCTIONS, onCall });
         set({ enabled, info });
       },
+      setClient: (client) => set({ client }),
     }),
-    { name: "klikreel-mcp", partialize: (s) => ({ enabled: s.enabled }) },
+    { name: "klikreel-mcp", partialize: (s) => ({ enabled: s.enabled, client: s.client }) },
   ),
 );
 
-/** Polls whether Claude Code is connected while the server runs. */
+/** Polls whether an agent is connected while the server runs. */
 export function useMcpLink(): McpLink | null {
   const enabled = useMcp((s) => s.enabled);
   useEffect(() => {
@@ -438,5 +444,47 @@ export function useMcpLink(): McpLink | null {
  */
 if (useMcp.getState().enabled) useMcp.getState().setEnabled(true).catch(() => useMcp.setState({ enabled: false }));
 
-export const addCommand = (info: McpInfo) =>
-  `claude mcp add --transport http --scope user klikreel ${info.url} --header "Authorization: Bearer ${info.token}"`;
+export type McpClientId = "claude" | "codex" | "gemini" | "other";
+
+export interface McpClient {
+  id: McpClientId;
+  name: string;
+  /** Command that starts it in the terminal; none for editors and other apps. */
+  bin?: string;
+  /** "command": run once in a terminal; "toml"/"json": paste into its config file. */
+  kind: "command" | "toml" | "json";
+  /** Config file the snippet goes into, when it is not a command. */
+  file?: string;
+  setup(info: McpInfo): string;
+}
+
+export const MCP_CLIENTS: McpClient[] = [
+  {
+    id: "claude", name: "Claude Code", bin: "claude", kind: "command",
+    setup: (i) => `claude mcp add --transport http --scope user klikreel ${i.url} --header "Authorization: Bearer ${i.token}"`,
+  },
+  {
+    // `codex mcp add` can't set a static header, so the server goes into its config file.
+    // Voiceovers and exports outlast Codex's default 60 s tool timeout.
+    id: "codex", name: "Codex", bin: "codex", kind: "toml", file: "~/.codex/config.toml",
+    setup: (i) => `[mcp_servers.klikreel]\nurl = "${i.url}"\nhttp_headers = { Authorization = "Bearer ${i.token}" }\ntool_timeout_sec = 1800`,
+  },
+  {
+    id: "gemini", name: "Gemini CLI", bin: "gemini", kind: "command",
+    setup: (i) => `gemini mcp add --transport http --scope user klikreel ${i.url} --header "Authorization: Bearer ${i.token}"`,
+  },
+  {
+    // The mcpServers shape most editors read (Cursor, Windsurf, VS Code extensions…).
+    id: "other", name: "Other MCP client", kind: "json",
+    setup: (i) => JSON.stringify({ mcpServers: { klikreel: { type: "http", url: i.url, headers: { Authorization: `Bearer ${i.token}` } } } }, null, 2),
+  },
+];
+
+export const mcpClient = (id: McpClientId) => MCP_CLIENTS.find((c) => c.id === id) ?? MCP_CLIENTS[0];
+
+/** Friendly name for the `clientInfo` an agent sent, e.g. "codex-mcp-client 0.50.0" → "Codex". */
+export function agentName(client: string | null | undefined): string {
+  const c = client?.toLowerCase() ?? "";
+  const known = MCP_CLIENTS.find((x) => x.bin && c.includes(x.bin));
+  return known?.name ?? (client?.split(" ")[0] || "MCP");
+}

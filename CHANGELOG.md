@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.16
+
+- The local MCP server now works with any AI agent, not only Claude Code: pick Claude Code, Codex, Gemini CLI or another MCP client under **Connect AI agent** in the terminal and copy its setup (a command, a `~/.codex/config.toml` block or an `mcpServers` JSON entry)
+- The terminal's *Type* button starts the agent you picked, and the badge and activity log show which agent is connected
+
 ## 0.1.15
 
 - The command that loads audio into the player follows the same rule as the asset protocol, so the interface can only read KlikReel's own media and the files you choose

@@ -1,5 +1,6 @@
 //! Read-only, sandboxed access to a workspace folder (the user's product
-//! codebase) so the AI can research it. Secrets are never exposed.
+//! codebase) so the AI can research it. Files that commonly hold secrets
+//! (see `is_secret`) are never read; secrets inside source files are not detected.
 use crate::bin;
 use crate::error::{AppError, AppResult};
 use base64::Engine;

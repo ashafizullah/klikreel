@@ -1,5 +1,6 @@
 //! Locate external binaries. GUI apps on macOS don't inherit the shell PATH,
-//! so check the bundled sidecar location and common install prefixes first.
+//! so check next to the app's executable and common install prefixes first.
+//! Nothing is bundled: these are the user's own installs.
 use std::path::PathBuf;
 
 pub fn find(name: &str) -> Option<PathBuf> {

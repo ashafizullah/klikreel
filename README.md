@@ -37,7 +37,7 @@
 - **Built-in terminal** (Ctrl+`) opened in your project folder
 - **Works with Claude Code**: turn on the local MCP server and your own Claude Code can edit scenes, write their HTML, record voiceovers, take snapshots and export
 - **Export** to MP4 with headless Chrome and ffmpeg
-- **Auto-update** from GitHub Releases (signed packages; checked daily, or via *Check for updates* on the home screen)
+- **Auto-update** from GitHub Releases (signed packages; checked at launch at most once a day, or via *Check for updates* on the home screen)
 - **English and Bahasa Indonesia** interface
 
 ## Using Claude Code
@@ -74,6 +74,12 @@ curl -fsSL https://raw.githubusercontent.com/ashafizullah/klikreel/main/install.
 - Google Chrome, Chromium, Edge or Brave (used for rendering)
 - An API key for a chat model, and one for text-to-speech if you want voiceovers
 
+ffmpeg, the browser and Claude Code are not bundled: KlikReel uses the copies installed on your computer. When ffmpeg or a browser is missing, it shows the command that installs it (Homebrew on macOS, winget on Windows, apt on Linux).
+
+## Privacy
+
+KlikReel has no account, server or telemetry. Projects are saved in the app's data folder and API keys in the OS keychain. When you use the AI features, your prompt, the parts of your project it reads (code, UI text, screenshots) and the narration text are sent to the AI and voice providers you set up, under their terms. Files that usually hold secrets (`.env`, keys, credential files) are never read, but secrets written into source code are not detected. Update checks contact GitHub.
+
 ## Development
 
 Requires [Bun](https://bun.sh/) and stable Rust.
@@ -108,6 +114,6 @@ KlikReel is free. If it saves you time, **[buy me an AI token on Trakteer](https
 
 [MIT](LICENSE)
 
-The app bundles third-party software, including the interface fonts Fraunces, IBM Plex Sans and IBM Plex Mono (SIL Open Font License 1.1). Their licenses are in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md), which the app also shows under Settings → Open-source licenses. Run `bun run notices` after changing dependencies.
+The app bundles third-party software, including the interface fonts Fraunces, IBM Plex Sans and IBM Plex Mono (SIL Open Font License 1.1) and the [GSAP](https://gsap.com) animation library, which is free to use but not open source: it is under GSAP's own [Standard "No Charge" License](https://gsap.com/standard-license), not MIT. Their licenses are in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md), which the app also shows under Settings → Open-source licenses. Run `bun run notices` after changing dependencies.
 
-Claude and Claude Code are trademarks of Anthropic. KlikReel is an independent project and is not affiliated with or endorsed by Anthropic.
+Claude and Claude Code are trademarks of Anthropic. OpenAI, xAI, GSAP, Google Chrome and other names mentioned are trademarks of their respective owners. KlikReel is an independent project and is not affiliated with or endorsed by any of them.

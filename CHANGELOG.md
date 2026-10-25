@@ -2,7 +2,7 @@
 
 ## 0.1.14
 
-- The app can now only read its own files and the files you choose, not any file on disk
+- The webview's asset protocol can now only load KlikReel's own media and the music files you choose, instead of any file on disk
 
 ## 0.1.13
 

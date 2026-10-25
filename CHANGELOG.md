@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.14
+
+- The app can now only read its own files and the files you choose, not any file on disk
+
 ## 0.1.13
 
 - Third-party notices now include every license and notice text for packages under more than one license, and a source link for the MPL-2.0 crates

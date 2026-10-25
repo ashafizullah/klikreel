@@ -67,6 +67,19 @@ fn project_thumb(v: &Value) -> Option<ProjectThumb> {
     Some(ProjectThumb { html: scene["html"].as_str()?.to_string(), duration: scene["duration"].as_f64().unwrap_or(4.0), assets })
 }
 
+/// Media files a stored project plays (background music and voiceovers). The
+/// music may live anywhere the user picked it, so it is re-allowed on the asset
+/// protocol when the project is opened again.
+pub fn referenced_media(json: &str) -> Vec<PathBuf> {
+    let Ok(v) = serde_json::from_str::<Value>(json) else { return vec![] };
+    let assets = v["assets"].as_object().into_iter().flatten().map(|(_, a)| &a["path"]);
+    let mut out: Vec<PathBuf> =
+        assets.chain([&v["brief"]["musicPath"]]).filter_map(|p| p.as_str()).map(PathBuf::from).filter(|p| p.is_file()).collect();
+    out.sort();
+    out.dedup();
+    out
+}
+
 /// Total size of all files under `dir`.
 pub fn dir_size(dir: &Path) -> u64 {
     let Ok(entries) = std::fs::read_dir(dir) else { return 0 };
@@ -272,6 +285,21 @@ fn write_atomic(path: &Path, contents: &str) -> AppResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn referenced_media_lists_existing_asset_files() {
+        let dir = std::env::temp_dir().join(format!("klikreel-ref-{}", uuid::Uuid::new_v4().simple()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let music = dir.join("song.mp3");
+        std::fs::write(&music, b"x").unwrap();
+        let m = music.to_string_lossy().replace('\\', "\\\\");
+        let json = format!(
+            r#"{{"brief":{{"musicPath":"{m}"}},"assets":{{"ast_music":{{"path":"{m}"}},"ast_voice_1":{{"path":"/no/such/file.mp3"}}}}}}"#
+        );
+        assert_eq!(referenced_media(&json), vec![music]);
+        assert!(referenced_media("not json").is_empty());
+        std::fs::remove_dir_all(dir).unwrap();
+    }
 
     #[test]
     fn workspace_and_project_roundtrip() {

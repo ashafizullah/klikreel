@@ -7,8 +7,8 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
-use tauri::State;
 use tauri::ipc::Channel;
+use tauri::{AppHandle, State};
 
 #[derive(Serialize, Clone)]
 #[serde(tag = "type", rename_all = "camelCase")]
@@ -55,9 +55,21 @@ pub async fn ai_generate_frame(request: FrameRequest, on_event: Channel<AiStream
 
 // ---- media ----------------------------------------------------------------
 
+/// Lets the webview load a file through the asset protocol, whose static scope
+/// only covers the app's own folders (see `assetProtocol` in tauri.conf.json).
+fn allow_asset(app: &AppHandle, path: &std::path::Path) {
+    use tauri::Manager;
+    let _ = app.asset_protocol_scope().allow_file(path);
+}
+
+/// Probes a media file. Files the user picks (background music) are probed
+/// before use, so a file that turns out to be real media is allowed on the
+/// asset protocol here.
 #[tauri::command]
-pub async fn media_probe(path: String) -> AppResult<media::MediaInfo> {
-    media::probe(&path).await
+pub async fn media_probe(path: String, app: AppHandle) -> AppResult<media::MediaInfo> {
+    let info = media::probe(&path).await?;
+    allow_asset(&app, std::path::Path::new(&path));
+    Ok(info)
 }
 
 #[tauri::command]
@@ -201,8 +213,12 @@ pub fn project_store(id: String, json: String, lib: State<'_, Library>) -> AppRe
 }
 
 #[tauri::command]
-pub fn project_fetch(id: String, lib: State<'_, Library>) -> AppResult<String> {
-    lib.load_project(&id)
+pub fn project_fetch(id: String, lib: State<'_, Library>, app: AppHandle) -> AppResult<String> {
+    let json = lib.load_project(&id)?;
+    for path in crate::library::referenced_media(&json) {
+        allow_asset(&app, &path);
+    }
+    Ok(json)
 }
 
 #[tauri::command]

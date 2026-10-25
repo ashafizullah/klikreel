@@ -117,3 +117,8 @@ KlikReel is free. If it saves you time, **[buy me an AI token on Trakteer](https
 The app bundles third-party software, including the interface fonts Fraunces, IBM Plex Sans and IBM Plex Mono (SIL Open Font License 1.1) and the [GSAP](https://gsap.com) animation library, which is free to use but not open source: it is under GSAP's own [Standard "No Charge" License](https://gsap.com/standard-license), not MIT. Their licenses are in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md), which the app also shows under Settings → Open-source licenses. Run `bun run notices` after changing dependencies.
 
 Claude and Claude Code are trademarks of Anthropic. OpenAI, xAI, GSAP, Google Chrome and other names mentioned are trademarks of their respective owners. KlikReel is an independent project and is not affiliated with or endorsed by any of them.
+
+<p>
+  <a href="https://github.com/ashafizullah"><img src="https://github.com/ashafizullah.png?size=64" width="32" height="32" alt="" align="left" style="border-radius:50%"></a>
+  &nbsp;Built by <a href="https://github.com/ashafizullah"><b>Adam Suchi Hafizullah</b></a>
+</p>

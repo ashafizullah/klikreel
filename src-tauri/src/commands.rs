@@ -80,7 +80,12 @@ pub async fn media_thumbnails(path: String, duration: f64, count: u32, height: u
 /// Raw file bytes for in-memory playback (WebKit stutters when streaming
 /// media through the custom asset protocol).
 #[tauri::command]
-pub async fn media_bytes(path: String) -> AppResult<tauri::ipc::Response> {
+pub async fn media_bytes(app: AppHandle, path: String) -> AppResult<tauri::ipc::Response> {
+    use tauri::Manager;
+    // Same rule as the asset protocol: only KlikReel's own media and files the user picked.
+    if !app.asset_protocol_scope().is_allowed(&path) {
+        return Err(AppError::msg("This file is outside KlikReel's media folders"));
+    }
     const MAX: u64 = 200 * 1024 * 1024;
     if tokio::fs::metadata(&path).await?.len() > MAX {
         return Err(AppError::msg("File is too large to load into memory"));

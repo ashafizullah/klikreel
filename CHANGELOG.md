@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.15
+
+- The command that loads audio into the player follows the same rule as the asset protocol, so the interface can only read KlikReel's own media and the files you choose
+
 ## 0.1.14
 
 - The webview's asset protocol can now only load KlikReel's own media and the music files you choose, instead of any file on disk

@@ -14,7 +14,8 @@ repository = "https://github.com/ashafizullah/klikreel"
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
 name = "klikreel_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
+# Desktop only: the static and dynamic libraries are for Android and iOS builds.
+crate-type = ["rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -46,6 +47,14 @@ axum = { version = "0.8.9", default-features = false, features = ["http1", "json
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
+# Debug builds keep line numbers for backtraces but not full debug info, which kept
+# the build folder at tens of gigabytes.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
+
 [profile.release]
 codegen-units = 1
 lto = true

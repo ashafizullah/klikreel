@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { Bot, Check, CircleDot, Loader2, Mic, Play, RefreshCw, Trash2, Zap } from "lucide-react";
 import {
   PROFILE_PRESETS, TTS_ENGINES, VOICE_PRESETS, useSettings, voiceRequest,
@@ -42,6 +43,7 @@ export function SettingsDialog() {
           ))}
         </div>
         <div className="flex items-center gap-2 text-[12px] text-muted">
+          <button className="mr-2 hover:text-text" onClick={() => openUrl("https://github.com/ashafizullah/klikreel").catch(notifyError)}>GitHub</button>
           <button className="mr-2 hover:text-text" onClick={() => setNotices(true)}>{t("settings.licenses")}</button>
           {t("settings.appLanguage")} <LanguageToggle />
         </div>
